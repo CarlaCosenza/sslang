@@ -5,6 +5,8 @@ import "regexp"
 type Analyser struct {
 	scapeRunes    []rune
 	reservedWords map[string]int
+
+	isLiteralReg *regexp.Regexp
 }
 
 func NewAnalyser() *Analyser {
@@ -27,6 +29,7 @@ func NewAnalyser() *Analyser {
 			"true":     TRUE,
 			"false":    FALSE,
 		},
+		isLiteralReg: regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9]+"),
 	}
 }
 
@@ -71,9 +74,8 @@ type Automata struct {
 	current int
 }
 
-func isLiteral(s string) bool {
-	reg := regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9]+")
-	return reg.MatchString(s)
+func (a *Analyser) isLiteral(s string) bool {
+	return a.isLiteralReg.MatchString(s)
 }
 
 func NewAutomata() *Automata {
