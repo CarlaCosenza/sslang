@@ -54,3 +54,35 @@ func TestParseWord(t *testing.T) {
 		})
 	}
 }
+
+func TestNextToken(t *testing.T) {
+	tt := map[string]struct {
+		buf *bytes.Buffer
+
+		token int
+		err   error
+	}{
+		"test parse identifier": {
+			buf: bytes.NewBufferString("foo_"),
+
+			token: ID,
+			err:   nil,
+		},
+		"test parse identifier after a hell lot of whitespace": {
+			buf: bytes.NewBufferString("    foo_"),
+
+			token: ID,
+			err:   nil,
+		},
+	}
+
+	lexer := NewLexer([]byte{})
+
+	for name, table := range tt {
+		t.Run(name, func(t *testing.T) {
+			token, err := lexer.nextToken(table.buf)
+			assert.Equal(t, table.err, err)
+			assert.Equal(t, table.token, token)
+		})
+	}
+}

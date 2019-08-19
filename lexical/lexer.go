@@ -49,9 +49,12 @@ func NewLexer(program []byte) *Lexer {
 			"true":     True,
 			"false":    False,
 		},
-		isLiteralReg: regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9]+"),
-		identifiers:  map[string]int{},
-		program:      programBuffer,
+		isLiteralReg:    regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9]+"),
+		identifiers:     map[string]int{},
+		intConstants:    []string{},
+		stringConstants: []string{},
+		runeConstants:   []rune{},
+		program:         programBuffer,
 	}
 }
 
@@ -75,9 +78,15 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 	var nextRune rune
 	var err error
 	token := UNKNOWN
-	for nextRune, _, err = buf.ReadRune(); unicode.IsSpace(nextRune); {
+
+	for {
+		nextRune, _, err = buf.ReadRune()
 		if err != nil {
 			return -1, err
+		}
+
+		if !unicode.IsSpace(nextRune) {
+			break
 		}
 	}
 
