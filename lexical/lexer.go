@@ -4,7 +4,6 @@ package lexical
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"regexp"
 	"strings"
@@ -85,7 +84,7 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 	if isAlpha(nextRune) {
 		// testing if token is identifier, maybe @Refactor to make this clearer ?
 		// (basically copypasted from the book)
-		text, err := parseWord(nextRune, buf, func(r rune) bool {
+		text, err := parseWord(buf, func(r rune) bool {
 			return isAlpha(r) || r == '_'
 		})
 
@@ -100,7 +99,7 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 		}
 
 	} else if isDigit(nextRune) {
-		text, err := parseWord(nextRune, buf, func(r rune) bool {
+		text, err := parseWord(buf, func(r rune) bool {
 			return isDigit(r)
 		})
 		if err != nil {
@@ -116,17 +115,26 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 	return token, nil
 }
 
-func parseWord(firstRune rune, buf *bytes.Buffer, criteria func(rune) bool) (string, error) {
+func parseWord(buf *bytes.Buffer, criteria func(rune) bool) (string, error) {
 	// @Refactor: maybe we should unread the rune and re-read it rather than pass extremely
 	// misleading and shady 'firstRune'
 	var sb strings.Builder
 	var err error
 
-	for criteria(firstRune) && err != io.EOF {
-		fmt.Println(firstRune)
-		sb.WriteRune(firstRune)
+	err = buf.UnreadRune()
+	if err != nil {
+		return "", err
+	}
 
-		firstRune, _, err = buf.ReadRune()
+	nextToken, _, err := buf.ReadRune()
+	if err != nil {
+		return "", err
+	}
+
+	for criteria(nextToken) && err != io.EOF {
+		sb.WriteRune(nextToken)
+
+		nextToken, _, err = buf.ReadRune()
 		if err != nil {
 			if err == io.EOF {
 				break
