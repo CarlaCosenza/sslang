@@ -2,7 +2,6 @@ package lexical
 
 import (
 	"bytes"
-	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,16 +24,26 @@ func TestParseWord(t *testing.T) {
 			},
 
 			text: "potato_",
-			err:  io.EOF,
+			err:  nil,
 		},
 		"test parse identifier no EOF": {
-			buf:       bytes.NewBufferString("otato_ "),
+			buf:       bytes.NewBufferString("otato_ &*$#!@"),
 			firstRune: 'p',
 			criteria: func(r rune) bool {
 				return isAlpha(r) || r == '_'
 			},
 
 			text: "potato_",
+			err:  nil,
+		},
+		"test parse digit": {
+			buf:       bytes.NewBufferString("123849 @#41"),
+			firstRune: '1',
+			criteria: func(r rune) bool {
+				return isDigit(r)
+			},
+
+			text: "1123849",
 			err:  nil,
 		},
 	}

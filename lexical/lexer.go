@@ -1,18 +1,20 @@
 package lexical
 
+// Lexical analyser implementation, see book @ page 4
+
 import (
 	"bytes"
 	"fmt"
 	"io"
 	"regexp"
-	"strconv"
 	"strings"
 	"unicode"
 )
 
 // Lexer analyse if a set of tokens is part of our language and
-// parse its tokens
+// parse its tokens stream
 type Lexer struct {
+	// TODO: track lines we are reading
 	scapeRunes         []rune
 	reservedWordTokens map[string]int
 
@@ -22,13 +24,14 @@ type Lexer struct {
 
 	identifiers map[string]int
 
-	intConstants    []int
+	intConstants    []string
 	stringConstants []string
 	runeConstants   []rune
 }
 
 // NewLexer builds an analyser
-func NewLexer() *Lexer {
+func NewLexer(program []byte) *Lexer {
+	programBuffer := bytes.NewBuffer(program)
 	return &Lexer{
 		reservedWordTokens: map[string]int{
 			"integer":  Integer,
@@ -49,6 +52,7 @@ func NewLexer() *Lexer {
 		},
 		isLiteralReg: regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9]+"),
 		identifiers:  map[string]int{},
+		program:      programBuffer,
 	}
 }
 
@@ -57,9 +61,9 @@ func (a *Lexer) isLiteral(s string) bool {
 }
 
 // Run runs the lexical analysis
-func (a *Lexer) Run(buf *bytes.Buffer) ([]int, error) {
+func (a *Lexer) Run() ([]int, error) {
 	tokens := []int{}
-	for token, err := a.nextToken(buf); err != io.EOF; {
+	for token, err := a.nextToken(a.program); err != io.EOF; {
 		tokens = append(tokens, token)
 		if err != nil {
 			return nil, err
@@ -79,6 +83,8 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 	}
 
 	if isAlpha(nextRune) {
+		// testing if token is identifier, maybe @Refactor to make this clearer ?
+		// (basically copypasted from the book)
 		text, err := parseWord(nextRune, buf, func(r rune) bool {
 			return isAlpha(r) || r == '_'
 		})
@@ -87,14 +93,12 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 			return -1, err
 		}
 
-		token, ok := a.reservedWordTokens[text]
+		_, ok := a.reservedWordTokens[text]
 		if !ok {
-			return -1, fmt.Errorf("%s unknown identifier", text)
+			a.registerIdentifier(text)
+			token = ID
 		}
 
-		if token == ID {
-			a.registerIdentifier(text)
-		}
 	} else if isDigit(nextRune) {
 		text, err := parseWord(nextRune, buf, func(r rune) bool {
 			return isDigit(r)
@@ -103,27 +107,26 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 			return -1, err
 		}
 
-		val, err := strconv.Atoi(text)
-		if err != nil {
-			return -1, err
-		}
-
-		a.intConstants = append(a.intConstants, val)
-	} else {
-
+		a.intConstants = append(a.intConstants, text)
+		token = Numeral
+	} else if nextRune == '"' {
+		// TODO: parse string constant
 	}
 
 	return token, nil
 }
 
-func parseWord(nextRune rune, buf *bytes.Buffer, criteria func(rune) bool) (string, error) {
+func parseWord(firstRune rune, buf *bytes.Buffer, criteria func(rune) bool) (string, error) {
+	// @Refactor: maybe we should unread the rune and re-read it rather than pass extremely
+	// misleading and shady 'firstRune'
 	var sb strings.Builder
 	var err error
 
-	for isAlpha(nextRune) || nextRune == '_' && err != io.EOF {
-		sb.WriteRune(nextRune)
+	for criteria(firstRune) && err != io.EOF {
+		fmt.Println(firstRune)
+		sb.WriteRune(firstRune)
 
-		nextRune, _, err = buf.ReadRune()
+		firstRune, _, err = buf.ReadRune()
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -137,7 +140,7 @@ func parseWord(nextRune rune, buf *bytes.Buffer, criteria func(rune) bool) (stri
 }
 
 func isAlpha(r rune) bool {
-	return (r >= 'a' && r <= 'z') || (r >= 'A' || r <= 'Z')
+	return unicode.IsLetter(r)
 }
 
 func isAlphaNumeric(r rune) bool {
@@ -145,7 +148,7 @@ func isAlphaNumeric(r rune) bool {
 }
 
 func isDigit(r rune) bool {
-	return (r >= '0' && r <= '9')
+	return unicode.IsDigit(r)
 }
 
 func (a *Lexer) registerIdentifier(s string) {
