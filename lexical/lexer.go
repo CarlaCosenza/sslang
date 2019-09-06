@@ -65,11 +65,17 @@ func (a *Lexer) isLiteral(s string) bool {
 // Run runs the lexical analysis
 func (a *Lexer) Run() ([]int, error) {
 	tokens := []int{}
-	for token, err := a.nextToken(a.program); err != io.EOF; {
-		tokens = append(tokens, token)
-		if err != nil {
+	for {
+		token, err := a.nextToken(a.program)
+		if err != nil && err != io.EOF {
 			return nil, err
 		}
+
+		if err == io.EOF {
+			break
+		}
+
+		tokens = append(tokens, token)
 	}
 	return tokens, nil
 }
@@ -119,14 +125,14 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 		token = Numeral
 	} else if nextRune == '"' {
 		// TODO: parse string constant
+	} else {
+		// TODO: giant switch case (we could make this simpler by making a map[rune]func(rune)(int,error))
 	}
 
 	return token, nil
 }
 
 func parseWord(buf *bytes.Buffer, criteria func(rune) bool) (string, error) {
-	// @Refactor: maybe we should unread the rune and re-read it rather than pass extremely
-	// misleading and shady 'firstRune'
 	var sb strings.Builder
 	var err error
 

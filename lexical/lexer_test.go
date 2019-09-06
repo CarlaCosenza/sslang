@@ -74,6 +74,12 @@ func TestNextToken(t *testing.T) {
 			token: ID,
 			err:   nil,
 		},
+		"test parse numeral": {
+			buf: bytes.NewBufferString("1023498"),
+
+			token: Numeral,
+			err:   nil,
+		},
 	}
 
 	lexer := NewLexer([]byte{})
@@ -83,6 +89,33 @@ func TestNextToken(t *testing.T) {
 			token, err := lexer.nextToken(table.buf)
 			assert.Equal(t, table.err, err)
 			assert.Equal(t, table.token, token)
+		})
+	}
+}
+
+func TestRun(t *testing.T) {
+	tt := map[string]struct {
+		program string
+
+		tokens []int
+		err    error
+	}{
+		"test id and numeral": {
+			program: "potato 102349 potato2",
+			tokens:  []int{ID, Numeral, ID},
+			err:     nil,
+		},
+	}
+
+	for name, table := range tt {
+		t.Run(name, func(t *testing.T) {
+			program := []byte(table.program)
+			lexer := NewLexer(program)
+
+			tokens, err := lexer.Run()
+
+			assert.Equal(t, table.tokens, tokens)
+			assert.Equal(t, table.err, err)
 		})
 	}
 }
