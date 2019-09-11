@@ -124,7 +124,17 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 		a.intConstants = append(a.intConstants, text)
 		token = Numeral
 	} else if nextRune == '"' {
-		// TODO: parse string constant
+		buf.ReadRune()
+		text, err := parseWord(buf, func(r rune) bool {
+			return r != '"'
+		})
+
+		if err != nil {
+			return -1, err
+		}
+
+		token = Stringval
+		a.stringConstants = append(a.stringConstants, text)
 	} else {
 		// TODO: giant switch case (we could make this simpler by making a map[rune]func(rune)(int,error))
 	}

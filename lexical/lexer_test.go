@@ -105,6 +105,11 @@ func TestRun(t *testing.T) {
 			tokens:  []int{ID, Numeral, ID},
 			err:     nil,
 		},
+		"test id string": {
+			program: "potato \"potato\" ",
+			tokens:  []int{ID, Stringval},
+			err:     nil,
+		},
 		"test id reserved words": {
 			program: "var potato integer",
 			tokens:  []int{Var, ID, Integer},
