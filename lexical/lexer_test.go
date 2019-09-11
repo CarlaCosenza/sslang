@@ -105,6 +105,11 @@ func TestRun(t *testing.T) {
 			tokens:  []int{ID, Numeral, ID},
 			err:     nil,
 		},
+		"test id reserved words": {
+			program: "var potato integer",
+			tokens:  []int{Var, ID, Integer},
+			err:     nil,
+		},
 	}
 
 	for name, table := range tt {

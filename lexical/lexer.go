@@ -97,8 +97,6 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 	}
 
 	if isAlpha(nextRune) {
-		// testing if token is identifier, maybe @Refactor to make this clearer ?
-		// (basically copypasted from the book)
 		text, err := parseWord(buf, func(r rune) bool {
 			return isAlpha(r) || r == '_'
 		})
@@ -107,10 +105,12 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 			return -1, err
 		}
 
-		_, ok := a.reservedWordTokens[text]
+		reservedToken, ok := a.reservedWordTokens[text]
 		if !ok {
 			a.registerIdentifier(text)
 			token = ID
+		} else {
+			token = reservedToken
 		}
 
 	} else if isDigit(nextRune) {
