@@ -115,6 +115,14 @@ func TestRun(t *testing.T) {
 			tokens:  []int{Var, ID, Integer},
 			err:     nil,
 		},
+		"test all marginal cases": {
+			program: ": ; , = [ ] { } ( ) && || < > <= >= != == + ++ - -- * / . !",
+			tokens: []int{Colon, Semicolon, Comma, Equals, LeftSquare, RightSquare, LeftBraces, RightBraces,
+				LeftParenthesis, RightParenthesis, And, Or, LessThan, GreaterThan, LessOrEqual,
+				GreaterOrEqual, NotEqual, EqualEqual, Plus, PlusPlus, Minus, MinusMinus, Times,
+				Divide, Dot, Not},
+			err: nil,
+		},
 	}
 
 	for name, table := range tt {

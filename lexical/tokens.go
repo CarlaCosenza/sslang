@@ -34,6 +34,7 @@ const (
 	LeftParenthesis
 	RightParenthesis
 	And
+	Or
 	LessThan
 	GreaterThan
 	LessOrEqual

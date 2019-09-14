@@ -4,6 +4,7 @@ package lexical
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"regexp"
 	"strings"
@@ -81,7 +82,7 @@ func (a *Lexer) Run() ([]int, error) {
 }
 
 func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
-	var nextRune rune
+	var nextRune, nextRune2 rune
 	var err error
 	token := UNKNOWN
 
@@ -137,6 +138,195 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 		a.stringConstants = append(a.stringConstants, text)
 	} else {
 		// TODO: giant switch case (we could make this simpler by making a map[rune]func(rune)(int,error))
+		switch nextRune {
+		case ':':
+			token = Colon
+			a.runeConstants = append(a.runeConstants, nextRune)
+		case ';':
+			token = Semicolon
+			a.runeConstants = append(a.runeConstants, nextRune)
+		case ',':
+			token = Comma
+			a.runeConstants = append(a.runeConstants, nextRune)
+		case '*':
+			token = Times
+			a.runeConstants = append(a.runeConstants, nextRune)
+		case '/':
+			token = Divide
+			a.runeConstants = append(a.runeConstants, nextRune)
+		case '.':
+			token = Dot
+			a.runeConstants = append(a.runeConstants, nextRune)
+		case '[':
+			token = LeftSquare
+			a.runeConstants = append(a.runeConstants, nextRune)
+		case ']':
+			token = RightSquare
+			a.runeConstants = append(a.runeConstants, nextRune)
+		case '{':
+			token = LeftBraces
+			a.runeConstants = append(a.runeConstants, nextRune)
+		case '}':
+			token = RightBraces
+			a.runeConstants = append(a.runeConstants, nextRune)
+		case '(':
+			token = LeftParenthesis
+			a.runeConstants = append(a.runeConstants, nextRune)
+		case ')':
+			token = RightParenthesis
+			a.runeConstants = append(a.runeConstants, nextRune)
+		case '&':
+			nextRune2, _, err = buf.ReadRune()
+			if err != nil {
+				return -1, err
+			}
+			if nextRune2 != '&' {
+				return -1, errors.New("Invalid character")
+			}
+			token = And
+			a.runeConstants = append(a.runeConstants, nextRune)
+		case '|':
+			nextRune2, _, err = buf.ReadRune()
+			if err != nil {
+				return -1, err
+			}
+			if nextRune2 != '|' {
+				return -1, errors.New("Invalid character")
+			}
+			token = Or
+			a.runeConstants = append(a.runeConstants, nextRune)
+		case '=':
+			nextRune2, _, err = buf.ReadRune()
+			if err != nil {
+				if err != io.EOF {
+					return -1, err
+				}
+				token = Equals
+				a.runeConstants = append(a.runeConstants, nextRune)
+				break
+			}
+			if nextRune2 != '=' {
+				err = buf.UnreadRune()
+				if err != nil {
+					return -1, err
+				}
+				token = Equals
+				a.runeConstants = append(a.runeConstants, nextRune)
+			} else {
+				token = EqualEqual
+				a.runeConstants = append(a.runeConstants, nextRune)
+			}
+		case '<':
+			nextRune2, _, err = buf.ReadRune()
+			if err != nil {
+				if err != io.EOF {
+					return -1, err
+				} else {
+					token = LessThan
+					a.runeConstants = append(a.runeConstants, nextRune)
+					break
+				}
+			}
+			if nextRune2 != '=' {
+				err = buf.UnreadRune()
+				if err != nil {
+					return -1, err
+				}
+				token = LessThan
+				a.runeConstants = append(a.runeConstants, nextRune)
+			} else {
+				token = LessOrEqual
+				a.runeConstants = append(a.runeConstants, nextRune)
+			}
+		case '>':
+			nextRune2, _, err = buf.ReadRune()
+			if err != nil {
+				if err != io.EOF {
+					return -1, err
+				} else {
+					token = GreaterThan
+					a.runeConstants = append(a.runeConstants, nextRune)
+					break
+				}
+			}
+			if nextRune2 != '=' {
+				err = buf.UnreadRune()
+				if err != nil {
+					return -1, err
+				}
+				token = GreaterThan
+				a.runeConstants = append(a.runeConstants, nextRune)
+			} else {
+				token = GreaterOrEqual
+				a.runeConstants = append(a.runeConstants, nextRune)
+			}
+		case '!':
+			nextRune2, _, err = buf.ReadRune()
+			if err != nil {
+				if err != io.EOF {
+					return -1, err
+				} else {
+					token = Not
+					a.runeConstants = append(a.runeConstants, nextRune)
+					break
+				}
+			}
+			if nextRune2 != '=' {
+				err = buf.UnreadRune()
+				if err != nil {
+					return -1, err
+				}
+				token = Not
+				a.runeConstants = append(a.runeConstants, nextRune)
+			} else {
+				token = NotEqual
+				a.runeConstants = append(a.runeConstants, nextRune)
+			}
+		case '+':
+			nextRune2, _, err = buf.ReadRune()
+			if err != nil {
+				if err != io.EOF {
+					return -1, err
+				} else {
+					token = Plus
+					a.runeConstants = append(a.runeConstants, nextRune)
+					break
+				}
+			}
+			if nextRune2 != '+' {
+				err = buf.UnreadRune()
+				if err != nil {
+					return -1, err
+				}
+				token = Plus
+				a.runeConstants = append(a.runeConstants, nextRune)
+			} else {
+				token = PlusPlus
+				a.runeConstants = append(a.runeConstants, nextRune)
+			}
+		case '-':
+			nextRune2, _, err = buf.ReadRune()
+			if err != nil {
+				if err != io.EOF {
+					return -1, err
+				} else {
+					token = Minus
+					a.runeConstants = append(a.runeConstants, nextRune)
+					break
+				}
+			}
+			if nextRune2 != '-' {
+				err = buf.UnreadRune()
+				if err != nil {
+					return -1, err
+				}
+				token = Minus
+				a.runeConstants = append(a.runeConstants, nextRune)
+			} else {
+				token = MinusMinus
+				a.runeConstants = append(a.runeConstants, nextRune)
+			}
+		}
 	}
 
 	return token, nil
