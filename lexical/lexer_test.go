@@ -101,7 +101,7 @@ func TestRun(t *testing.T) {
 		err    error
 	}{
 		"test id and numeral": {
-			program: "potato 102349 potato2",
+			program: "potato1 102349 potato2",
 			tokens:  []int{ID, Numeral, ID},
 			err:     nil,
 		},
@@ -122,6 +122,19 @@ func TestRun(t *testing.T) {
 				GreaterOrEqual, NotEqual, EqualEqual, Plus, PlusPlus, Minus, MinusMinus, Times,
 				Divide, Dot, Not},
 			err: nil,
+		},
+		"test sample program": {
+			program: `
+function main(arg:integer):integer
+{
+	var a:integer;
+	var b:integer;
+	var c:integer;
+	b = 1;
+	c = 2;
+}`,
+			tokens: []int{Function, ID, LeftParenthesis, ID, Colon, Integer, RightParenthesis, Colon, Integer, LeftBraces, Var, ID, Colon, Integer, Semicolon, Var, ID, Colon, Integer, Semicolon, Var, ID, Colon, Integer, Semicolon, ID, Equals, Numeral, ID, Equals, Numeral, RightBraces},
+			err:    nil,
 		},
 	}
 

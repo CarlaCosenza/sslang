@@ -15,7 +15,6 @@ import (
 // parse its tokens stream
 type Lexer struct {
 	// TODO: track lines we are reading
-	scapeRunes         []rune
 	reservedWordTokens map[string]int
 
 	program *bytes.Buffer
@@ -99,7 +98,7 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 
 	if isAlpha(nextRune) {
 		text, err := parseWord(buf, func(r rune) bool {
-			return isAlpha(r) || r == '_'
+			return isAlphaNumeric(r) || r == '_'
 		})
 
 		if err != nil {
@@ -113,6 +112,7 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 		} else {
 			token = reservedToken
 		}
+		buf.UnreadRune()
 
 	} else if isDigit(nextRune) {
 		text, err := parseWord(buf, func(r rune) bool {
@@ -137,44 +137,43 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 		token = Stringval
 		a.stringConstants = append(a.stringConstants, text)
 	} else {
-		// TODO: giant switch case (we could make this simpler by making a map[rune]func(rune)(int,error))
 		switch nextRune {
 		case ':':
 			token = Colon
-			a.runeConstants = append(a.runeConstants, nextRune)
+			break
 		case ';':
 			token = Semicolon
-			a.runeConstants = append(a.runeConstants, nextRune)
+			break
 		case ',':
 			token = Comma
-			a.runeConstants = append(a.runeConstants, nextRune)
+			break
 		case '*':
 			token = Times
-			a.runeConstants = append(a.runeConstants, nextRune)
+			break
 		case '/':
 			token = Divide
-			a.runeConstants = append(a.runeConstants, nextRune)
+			break
 		case '.':
 			token = Dot
-			a.runeConstants = append(a.runeConstants, nextRune)
+			break
 		case '[':
 			token = LeftSquare
-			a.runeConstants = append(a.runeConstants, nextRune)
+			break
 		case ']':
 			token = RightSquare
-			a.runeConstants = append(a.runeConstants, nextRune)
+			break
 		case '{':
 			token = LeftBraces
-			a.runeConstants = append(a.runeConstants, nextRune)
+			break
 		case '}':
 			token = RightBraces
-			a.runeConstants = append(a.runeConstants, nextRune)
+			break
 		case '(':
 			token = LeftParenthesis
-			a.runeConstants = append(a.runeConstants, nextRune)
+			break
 		case ')':
 			token = RightParenthesis
-			a.runeConstants = append(a.runeConstants, nextRune)
+			break
 		case '&':
 			nextRune2, _, err = buf.ReadRune()
 			if err != nil {
@@ -184,7 +183,7 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 				return -1, errors.New("Invalid character")
 			}
 			token = And
-			a.runeConstants = append(a.runeConstants, nextRune)
+			break
 		case '|':
 			nextRune2, _, err = buf.ReadRune()
 			if err != nil {
@@ -194,7 +193,7 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 				return -1, errors.New("Invalid character")
 			}
 			token = Or
-			a.runeConstants = append(a.runeConstants, nextRune)
+			break
 		case '=':
 			nextRune2, _, err = buf.ReadRune()
 			if err != nil {
@@ -202,7 +201,6 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 					return -1, err
 				}
 				token = Equals
-				a.runeConstants = append(a.runeConstants, nextRune)
 				break
 			}
 			if nextRune2 != '=' {
@@ -211,21 +209,18 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 					return -1, err
 				}
 				token = Equals
-				a.runeConstants = append(a.runeConstants, nextRune)
 			} else {
 				token = EqualEqual
-				a.runeConstants = append(a.runeConstants, nextRune)
 			}
+			break
 		case '<':
 			nextRune2, _, err = buf.ReadRune()
 			if err != nil {
 				if err != io.EOF {
 					return -1, err
-				} else {
-					token = LessThan
-					a.runeConstants = append(a.runeConstants, nextRune)
-					break
 				}
+				token = LessThan
+				break
 			}
 			if nextRune2 != '=' {
 				err = buf.UnreadRune()
@@ -233,21 +228,17 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 					return -1, err
 				}
 				token = LessThan
-				a.runeConstants = append(a.runeConstants, nextRune)
 			} else {
 				token = LessOrEqual
-				a.runeConstants = append(a.runeConstants, nextRune)
 			}
 		case '>':
 			nextRune2, _, err = buf.ReadRune()
 			if err != nil {
 				if err != io.EOF {
 					return -1, err
-				} else {
-					token = GreaterThan
-					a.runeConstants = append(a.runeConstants, nextRune)
-					break
 				}
+				token = GreaterThan
+				break
 			}
 			if nextRune2 != '=' {
 				err = buf.UnreadRune()
@@ -255,21 +246,18 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 					return -1, err
 				}
 				token = GreaterThan
-				a.runeConstants = append(a.runeConstants, nextRune)
 			} else {
 				token = GreaterOrEqual
-				a.runeConstants = append(a.runeConstants, nextRune)
 			}
 		case '!':
 			nextRune2, _, err = buf.ReadRune()
 			if err != nil {
 				if err != io.EOF {
 					return -1, err
-				} else {
-					token = Not
-					a.runeConstants = append(a.runeConstants, nextRune)
-					break
 				}
+
+				token = Not
+				break
 			}
 			if nextRune2 != '=' {
 				err = buf.UnreadRune()
@@ -277,21 +265,17 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 					return -1, err
 				}
 				token = Not
-				a.runeConstants = append(a.runeConstants, nextRune)
 			} else {
 				token = NotEqual
-				a.runeConstants = append(a.runeConstants, nextRune)
 			}
 		case '+':
 			nextRune2, _, err = buf.ReadRune()
 			if err != nil {
 				if err != io.EOF {
 					return -1, err
-				} else {
-					token = Plus
-					a.runeConstants = append(a.runeConstants, nextRune)
-					break
 				}
+				token = Plus
+				break
 			}
 			if nextRune2 != '+' {
 				err = buf.UnreadRune()
@@ -299,21 +283,18 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 					return -1, err
 				}
 				token = Plus
-				a.runeConstants = append(a.runeConstants, nextRune)
 			} else {
 				token = PlusPlus
-				a.runeConstants = append(a.runeConstants, nextRune)
 			}
 		case '-':
 			nextRune2, _, err = buf.ReadRune()
 			if err != nil {
 				if err != io.EOF {
 					return -1, err
-				} else {
-					token = Minus
-					a.runeConstants = append(a.runeConstants, nextRune)
-					break
 				}
+
+				token = Minus
+				break
 			}
 			if nextRune2 != '-' {
 				err = buf.UnreadRune()
@@ -381,4 +362,9 @@ func (a *Lexer) registerIdentifier(s string) {
 		secondaryToken = len(a.identifiers)
 		a.identifiers[s] = secondaryToken
 	}
+}
+
+// Identifiers retrieves the identifiers
+func (a *Lexer) Identifiers() map[string]int {
+	return a.identifiers
 }
