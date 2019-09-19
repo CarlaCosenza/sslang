@@ -115,6 +115,11 @@ func TestRun(t *testing.T) {
 			tokens:  []int{Var, ID, Integer},
 			err:     nil,
 		},
+		"test char constant": {
+			program: "b = 'a'",
+			tokens:  []int{ID, Equals, Character},
+			err:     nil,
+		},
 		"test all marginal cases": {
 			program: ": ; , = [ ] { } ( ) && || < > <= >= != == + ++ - -- * / . !",
 			tokens: []int{Colon, Semicolon, Comma, Equals, LeftSquare, RightSquare, LeftBraces, RightBraces,

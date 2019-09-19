@@ -5,6 +5,7 @@ package lexical
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"regexp"
 	"strings"
@@ -180,6 +181,24 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 			break
 		case ')':
 			token = RightParenthesis
+			break
+		case '\'':
+			runeCtt, _, err := buf.ReadRune()
+			if err != nil {
+				return -1, err
+			}
+
+			expectedQuotes, _, err := buf.ReadRune()
+			if err != nil {
+				return -1, err
+			}
+
+			if expectedQuotes != '\'' {
+				return -1, fmt.Errorf("Expected quotes")
+			}
+
+			token = Character
+			a.runeConstants = append(a.runeConstants, runeCtt)
 			break
 		case '&':
 			nextRune2, _, err = buf.ReadRune()
