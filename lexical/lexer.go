@@ -26,6 +26,8 @@ type Lexer struct {
 	intConstants    []string
 	stringConstants []string
 	runeConstants   []rune
+
+	line int
 }
 
 // NewLexer builds an analyser
@@ -55,6 +57,7 @@ func NewLexer(program []byte) *Lexer {
 		stringConstants: []string{},
 		runeConstants:   []rune{},
 		program:         programBuffer,
+		line:            0,
 	}
 }
 
@@ -89,6 +92,10 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 		nextRune, _, err = buf.ReadRune()
 		if err != nil {
 			return -1, err
+		}
+
+		if nextRune == '\n' {
+			a.line++
 		}
 
 		if !unicode.IsSpace(nextRune) {
@@ -302,10 +309,8 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 					return -1, err
 				}
 				token = Minus
-				a.runeConstants = append(a.runeConstants, nextRune)
 			} else {
 				token = MinusMinus
-				a.runeConstants = append(a.runeConstants, nextRune)
 			}
 		}
 	}
