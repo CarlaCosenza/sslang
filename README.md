@@ -4,8 +4,22 @@ sslang
 this is a compiler for Compilers class made up language, "Simple Script Language".
 
 
-roadmap
+building
+========
+
+requires:
+
+	- Go 1.x
+
+to build:
+
+	make build
+
+
+testing
 =======
 
-- [ ] lexical analyser
-- [ ] synthatical analyser
+
+simply run:
+
+	make test
