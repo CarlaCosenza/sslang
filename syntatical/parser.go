@@ -1,5 +1,11 @@
 package syntatical
 
+import (
+	"encoding/csv"
+	"io"
+	"os"
+)
+
 // Parser parses the program
 type Parser struct {
 	actionTable [][]string
@@ -24,16 +30,26 @@ func NewParser(actionTableFile string) (*Parser, error) {
 }
 
 func buildActionTableFromFile(file string) ([][]string, error) {
-	// 	f, err := os.Open(file)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	//
-	// 	reader := csv.NewReader(f)
-	// 	reader.Comma = '\t'
-	//
-	// 	for {
-	// 		line, err := reader.Read()
-	// 	}
-	return nil, nil
+	f, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+
+	reader := csv.NewReader(f)
+	reader.Comma = '\t'
+
+	actionTable := [][]string{}
+
+	reader.Read() // skip header
+	for {
+		line, err := reader.Read()
+
+		if err == io.EOF {
+			break
+		}
+
+		actionTable = append(actionTable, line[1:])
+	}
+
+	return actionTable, nil
 }

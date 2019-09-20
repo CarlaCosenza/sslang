@@ -1,9 +1,8 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/lucbarr/sslang/lexical"
+	"github.com/lucbarr/sslang/syntatical"
 )
 
 func main() {
@@ -17,14 +16,7 @@ func main() {
 }`)
 	lexer := lexical.NewLexer(program)
 
-	tokens, err := lexer.Run()
+	lexer.Run()
 
-	fmt.Println(tokens, err)
-
-	for _, token := range tokens {
-		fmt.Printf("%v ", lexical.TokenToString[token])
-	}
-
-	fmt.Println(lexer.Identifiers())
-
+	syntatical.NewParser("syntatical/action_table.csv")
 }
