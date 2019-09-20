@@ -102,22 +102,22 @@ func TestRun(t *testing.T) {
 	}{
 		"test id and numeral": {
 			program: "potato1 102349 potato2",
-			tokens:  []int{ID, Numeral, ID},
+			tokens:  []int{ID, Numeral, ID, EOF},
 			err:     nil,
 		},
 		"test id string": {
 			program: "potato \"potato\" ",
-			tokens:  []int{ID, Stringval},
+			tokens:  []int{ID, Stringval, EOF},
 			err:     nil,
 		},
 		"test id reserved words": {
 			program: "var potato integer",
-			tokens:  []int{Var, ID, Integer},
+			tokens:  []int{Var, ID, Integer, EOF},
 			err:     nil,
 		},
 		"test char constant": {
 			program: "b = 'a'",
-			tokens:  []int{ID, Equals, Character},
+			tokens:  []int{ID, Equals, Character, EOF},
 			err:     nil,
 		},
 		"test all marginal cases": {
@@ -125,7 +125,7 @@ func TestRun(t *testing.T) {
 			tokens: []int{Colon, Semicolon, Comma, Equals, LeftSquare, RightSquare, LeftBraces, RightBraces,
 				LeftParenthesis, RightParenthesis, And, Or, LessThan, GreaterThan, LessOrEqual,
 				GreaterOrEqual, NotEqual, EqualEqual, Plus, PlusPlus, Minus, MinusMinus, Times,
-				Divide, Dot, Not},
+				Divide, Dot, Not, EOF},
 			err: nil,
 		},
 		"test sample program": {
@@ -138,7 +138,7 @@ function main(arg:integer):integer
 	b = 1;
 	c = 2;
 }`,
-			tokens: []int{Function, ID, LeftParenthesis, ID, Colon, Integer, RightParenthesis, Colon, Integer, LeftBraces, Var, ID, Colon, Integer, Semicolon, Var, ID, Colon, Integer, Semicolon, Var, ID, Colon, Integer, Semicolon, ID, Equals, Numeral, ID, Equals, Numeral, RightBraces},
+			tokens: []int{Function, ID, LeftParenthesis, ID, Colon, Integer, RightParenthesis, Colon, Integer, LeftBraces, Var, ID, Colon, Integer, Semicolon, Var, ID, Colon, Integer, Semicolon, Var, ID, Colon, Integer, Semicolon, ID, Equals, Numeral, ID, Equals, Numeral, RightBraces, EOF},
 			err:    nil,
 		},
 	}

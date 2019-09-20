@@ -56,6 +56,7 @@ func (a *Lexer) Run() ([]int, error) {
 		}
 
 		if err == io.EOF {
+			tokens = append(tokens, EOF)
 			break
 		}
 

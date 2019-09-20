@@ -56,6 +56,9 @@ const (
 	Stringval
 	ID
 
+	// end of file help token
+	EOF
+
 	// this is not my language bruh
 	UNKNOWN
 )
