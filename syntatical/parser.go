@@ -2,6 +2,7 @@ package syntatical
 
 import (
 	"encoding/csv"
+	"fmt"
 	"io"
 	"os"
 	"strconv"
@@ -69,6 +70,7 @@ func (p *Parser) Run(tokens []int) error {
 	action := p.actionTable[state][TokenToAction[currentToken]]
 
 	for {
+		fmt.Println(action)
 
 		if accept(action) {
 			break
@@ -86,12 +88,12 @@ func (p *Parser) Run(tokens []int) error {
 
 		rule, ok := reduce(action)
 		if ok {
-			amountToPop := ruleNumberOfTokens[rule]
+			amountToPop := ruleNumberOfTokens[rule-1]
 			p.stateStack = p.stateStack[:len(p.stateStack)-amountToPop]
 
 			temporaryState := p.stateStack[len(p.stateStack)-1]
 
-			leftToken := ruleLeftTokens[rule]
+			leftToken := ruleLeftTokens[rule-1]
 			goTo := TokenToAction[leftToken]
 			stateString := p.actionTable[temporaryState][goTo]
 
@@ -101,6 +103,8 @@ func (p *Parser) Run(tokens []int) error {
 			}
 
 			p.stateStack = append(p.stateStack, state)
+
+			action = p.actionTable[state][TokenToAction[currentToken]]
 		}
 	}
 
