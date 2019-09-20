@@ -79,7 +79,7 @@ func (p *Parser) Run(tokens []int) error {
 			p.stateStack = append(p.stateStack, state)
 
 			nextToken()
-			action = p.actionTable[state][currentToken]
+			action = p.actionTable[state][TokenToAction[currentToken]]
 
 			continue
 		}
