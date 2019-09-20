@@ -88,9 +88,9 @@ var TokenToAction = map[int]int{
 	lexical.Stringval:        46,
 	lexical.Numeral:          47,
 	lexical.EOF:              48,
+	PLINE:                    49,
 
 	// Goto actions
-	PLINE: 49,
 	P:     50,
 	LDE:   51,
 	DE:    52,
@@ -121,3 +121,6 @@ var TokenToAction = map[int]int{
 	STR:   77,
 	NUM:   78,
 }
+
+const ruleLeftTokens = []int{P, LDE, LDE, DE, DE, T, T, T, T, T, DT, DT, DT, DC, DC, DF, LP, LP, B, LDV, LDV, LS, LS, DV, LI, LI, S, S, U, U, M, M, M, M, M, M, M, E, E, E, L, L, L, L, L, L, L, R, R, R, Y, Y, Y, F, F, F, F, F, F, F, F, F, F, F, F, F, F, LE, LE, LV, LV, LV, ID, TRUE, FALSE, CHR, STR, NUM}
+const ruleNumberOfTokens = []int{1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 9, 7, 4, 5, 3, 8, 5, 3, 4, 2, 1, 2, 1, 5, 3, 1, 1, 1, 5, 7, 7, 5, 7, 1, 4, 2, 2, 3, 3, 1, 3, 3, 3, 3, 3, 3, 1, 3, 3, 1, 3, 3, 1, 1, 2, 2, 2, 2, 3, 4, 2, 2, 1, 1, 1, 1, 1, 3, 1, 3, 4, 1, 1, 1, 1, 1, 1, 1}

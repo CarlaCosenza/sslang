@@ -84,9 +84,23 @@ func (p *Parser) Run(tokens []int) error {
 			continue
 		}
 
-		state, ok = reduce(action)
+		rule, ok = reduce(action)
 		if ok {
-			// TODO: reduce logic
+			amountToPop := ruleNumberOfTokens[rule]
+			p.stateStack = p.stateStack[:len(p.stateStack)-amountToPop]
+
+			temporaryState = p.stateStack[len(p.stateStack)-1]
+
+			leftToken := ruleLeftTokens[rule]
+			goTo := TokenToAction[leftToken]
+			stateString := p.actionTable[temporaryState][goTo]
+
+			state, err := strconv.Atoi(stateString)
+			if err != nil {
+				return err
+			}
+
+			p.stateStack = append(p.stateStack, state)
 		}
 	}
 
@@ -132,10 +146,3 @@ func shift(s string) (int, bool) {
 
 	return n, true
 }
-
-// Token parsing states
-const (
-	Shift = iota
-	Reduction
-	Accept
-)
