@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/lucbarr/sslang/lexical"
 	"github.com/lucbarr/sslang/syntatical"
 )
@@ -11,8 +13,8 @@ func main() {
 		lexical.Integer, lexical.LeftBraces, lexical.Var, lexical.ID, lexical.Colon,
 		lexical.Integer, lexical.Semicolon, lexical.Var, lexical.ID, lexical.Colon,
 		lexical.Integer, lexical.Semicolon, lexical.Var, lexical.ID, lexical.Colon,
-		lexical.Integer, lexical.Semicolon, lexical.ID, lexical.Equals, lexical.Numeral,
-		lexical.ID, lexical.Equals, lexical.Numeral, lexical.RightBraces, lexical.EOF}
+		lexical.Integer, lexical.Semicolon, lexical.ID, lexical.Equals, lexical.Numeral, lexical.Semicolon,
+		lexical.ID, lexical.Equals, lexical.Numeral, lexical.Semicolon, lexical.RightBraces, lexical.EOF}
 
 	parser, err := syntatical.NewParser("syntatical/action_table.csv")
 
@@ -20,5 +22,6 @@ func main() {
 		panic(err)
 	}
 
-	parser.Run(tokens)
+	err = parser.Run(tokens)
+	fmt.Println(err)
 }

@@ -70,7 +70,7 @@ func (p *Parser) Run(tokens []int) error {
 	action := p.actionTable[state][TokenToAction[currentToken]]
 
 	for {
-		fmt.Println(action)
+		fmt.Println(action, currentToken)
 
 		if accept(action) {
 			break
@@ -105,7 +105,10 @@ func (p *Parser) Run(tokens []int) error {
 			p.stateStack = append(p.stateStack, state)
 
 			action = p.actionTable[state][TokenToAction[currentToken]]
+			continue
 		}
+
+		return fmt.Errorf("Syntax error")
 	}
 
 	return nil

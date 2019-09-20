@@ -138,7 +138,7 @@ function main(arg:integer):integer
 	b = 1;
 	c = 2;
 }`,
-			tokens: []int{Function, ID, LeftParenthesis, ID, Colon, Integer, RightParenthesis, Colon, Integer, LeftBraces, Var, ID, Colon, Integer, Semicolon, Var, ID, Colon, Integer, Semicolon, Var, ID, Colon, Integer, Semicolon, ID, Equals, Numeral, ID, Equals, Numeral, RightBraces, EOF},
+			tokens: []int{Function, ID, LeftParenthesis, ID, Colon, Integer, RightParenthesis, Colon, Integer, LeftBraces, Var, ID, Colon, Integer, Semicolon, Var, ID, Colon, Integer, Semicolon, Var, ID, Colon, Integer, Semicolon, ID, Equals, Numeral, Semicolon, ID, Equals, Numeral, Semicolon, RightBraces, EOF},
 			err:    nil,
 		},
 	}

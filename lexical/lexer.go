@@ -113,6 +113,8 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 
 		a.intConstants = append(a.intConstants, text)
 		token = Numeral
+
+		buf.UnreadRune()
 	} else if nextRune == '"' {
 		buf.ReadRune()
 		text, err := parseWord(buf, func(r rune) bool {

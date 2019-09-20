@@ -1,6 +1,7 @@
 package syntatical
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/lucbarr/sslang/lexical"
@@ -18,20 +19,20 @@ func TestRun(t *testing.T) {
 				lexical.Integer, lexical.LeftBraces, lexical.Var, lexical.ID, lexical.Colon,
 				lexical.Integer, lexical.Semicolon, lexical.Var, lexical.ID, lexical.Colon,
 				lexical.Integer, lexical.Semicolon, lexical.Var, lexical.ID, lexical.Colon,
-				lexical.Integer, lexical.Semicolon, lexical.ID, lexical.Equals, lexical.Numeral,
-				lexical.ID, lexical.Equals, lexical.Numeral, lexical.RightBraces, lexical.EOF},
+				lexical.Integer, lexical.Semicolon, lexical.ID, lexical.Equals, lexical.Numeral, lexical.Semicolon,
+				lexical.ID, lexical.Equals, lexical.Numeral, lexical.Semicolon, lexical.RightBraces, lexical.EOF},
 			err: nil,
 		},
-		//		"test sample program syntactically incorrect": {
-		//			tokens: []int{lexical.Function, lexical.ID, lexical.LeftParenthesis, lexical.ID,
-		//				lexical.Colon, lexical.Integer, lexical.RightParenthesis, lexical.Colon,
-		//				lexical.Integer, lexical.LeftBraces, lexical.Var, lexical.ID, lexical.Colon,
-		//				lexical.Integer, lexical.Semicolon, lexical.Var, lexical.ID, lexical.Colon,
-		//				lexical.Integer, lexical.Semicolon, lexical.Var, lexical.ID, lexical.Colon,
-		//				lexical.Integer, lexical.Semicolon, lexical.ID, lexical.Equals, lexical.Numeral,
-		//				lexical.ID, lexical.Equals, lexical.Numeral, lexical.RightBraces, lexical.EOF},
-		//			err: fmt.Errorf("Syntax error"),
-		//		},
+		"test sample program syntactically incorrect": {
+			tokens: []int{lexical.Function, lexical.ID, lexical.LeftParenthesis, lexical.ID,
+				lexical.Colon, lexical.Integer, lexical.RightParenthesis, lexical.Colon,
+				lexical.Integer, lexical.LeftBraces, lexical.Var, lexical.ID, lexical.Colon,
+				lexical.Integer, lexical.Semicolon, lexical.Var, lexical.ID, lexical.Colon,
+				lexical.Integer, lexical.Semicolon, lexical.Var, lexical.ID, lexical.Colon,
+				lexical.Integer, lexical.Semicolon, lexical.ID, lexical.Equals, lexical.Numeral,
+				lexical.ID, lexical.Equals, lexical.Numeral, lexical.RightBraces, lexical.EOF},
+			err: fmt.Errorf("Syntax error"),
+		},
 	}
 
 	for name, table := range tt {
