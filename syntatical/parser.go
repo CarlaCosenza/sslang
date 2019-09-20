@@ -84,12 +84,12 @@ func (p *Parser) Run(tokens []int) error {
 			continue
 		}
 
-		rule, ok = reduce(action)
+		rule, ok := reduce(action)
 		if ok {
 			amountToPop := ruleNumberOfTokens[rule]
 			p.stateStack = p.stateStack[:len(p.stateStack)-amountToPop]
 
-			temporaryState = p.stateStack[len(p.stateStack)-1]
+			temporaryState := p.stateStack[len(p.stateStack)-1]
 
 			leftToken := ruleLeftTokens[rule]
 			goTo := TokenToAction[leftToken]
