@@ -115,3 +115,25 @@ var TokenToString = map[int]string{
 	// this is not my language bruh : "//",
 	UNKNOWN: "UNKNOWN",
 }
+
+// ReservedWordTokens maps reserved words strings into its tokens
+var ReservedWordTokens = map[string]int{
+	"array":    Array,
+	"boolean":  Boolean,
+	"break":    Break,
+	"char":     Char,
+	"continue": Continue,
+	"do":       Do,
+	"else":     Else,
+	"function": Function,
+	"if":       If,
+	"integer":  Integer,
+	"of":       Of,
+	"string":   String,
+	"struct":   Struct,
+	"true":     True,
+	"false":    False,
+	"type":     Type,
+	"var":      Var,
+	"while":    While,
+}

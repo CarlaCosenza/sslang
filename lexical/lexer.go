@@ -15,9 +15,6 @@ import (
 // Lexer analyse if a set of tokens is part of our language and
 // parse its tokens stream
 type Lexer struct {
-	// TODO: track lines we are reading
-	reservedWordTokens map[string]int
-
 	program *bytes.Buffer
 
 	isLiteralReg *regexp.Regexp
@@ -35,23 +32,6 @@ type Lexer struct {
 func NewLexer(program []byte) *Lexer {
 	programBuffer := bytes.NewBuffer(program)
 	return &Lexer{
-		reservedWordTokens: map[string]int{
-			"integer":  Integer,
-			"char":     Char,
-			"type":     Type,
-			"struct":   Struct,
-			"function": Function,
-			"var":      Var,
-			"boolean":  Boolean,
-			"of":       Of,
-			"do":       Do,
-			"break":    Break,
-			"continue": Continue,
-			"if":       If,
-			"else":     Else,
-			"true":     True,
-			"false":    False,
-		},
 		isLiteralReg:    regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9]+"),
 		identifiers:     map[string]int{},
 		intConstants:    []string{},
@@ -113,7 +93,7 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 			return -1, err
 		}
 
-		reservedToken, ok := a.reservedWordTokens[text]
+		reservedToken, ok := ReservedWordTokens[text]
 		if !ok {
 			a.registerIdentifier(text)
 			token = ID
