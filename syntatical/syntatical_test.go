@@ -35,7 +35,7 @@ function main(arg:integer):integer
 	b = 1;
 	c = 2;
 }`,
-			err: fmt.Errorf("Syntax error"),
+			err: fmt.Errorf("Syntax error at line 6"),
 		},
 	}
 

@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"regexp"
 	"strings"
 	"unicode"
 )
@@ -17,33 +16,26 @@ import (
 type Lexer struct {
 	program *bytes.Buffer
 
-	isLiteralReg *regexp.Regexp
-
 	identifiers map[string]int
 
 	intConstants    []string
 	stringConstants []string
 	runeConstants   []rune
 
-	line int
+	Line int
 }
 
 // NewLexer builds an analyser
 func NewLexer(program []byte) *Lexer {
 	programBuffer := bytes.NewBuffer(program)
 	return &Lexer{
-		isLiteralReg:    regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9]+"),
 		identifiers:     map[string]int{},
 		intConstants:    []string{},
 		stringConstants: []string{},
 		runeConstants:   []rune{},
 		program:         programBuffer,
-		line:            0,
+		Line:            0,
 	}
-}
-
-func (a *Lexer) isLiteral(s string) bool {
-	return a.isLiteralReg.MatchString(s)
 }
 
 // Run runs the lexical analysis
@@ -82,7 +74,7 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 		}
 
 		if nextRune == '\n' {
-			a.line++
+			a.Line++
 		}
 
 		if !unicode.IsSpace(nextRune) {

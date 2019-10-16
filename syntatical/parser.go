@@ -111,7 +111,7 @@ func (p *Parser) Run(lexer *lexical.Lexer) error {
 			continue
 		}
 
-		return fmt.Errorf("Syntax error")
+		return fmt.Errorf("Syntax error at line %v", lexer.Line)
 	}
 
 	return nil
