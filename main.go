@@ -26,17 +26,12 @@ usage : ./ssl example.ssl`)
 
 	lexer := lexical.NewLexer(bytes)
 
-	tokens, err := lexer.Run()
-	if err != nil {
-		fmt.Println(err)
-	}
-
 	parser, err := syntatical.NewParser("syntatical/action_table.csv")
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	err = parser.Run(tokens)
+	err = parser.Run(lexer)
 	if err != nil {
 		fmt.Println(err)
 	} else {

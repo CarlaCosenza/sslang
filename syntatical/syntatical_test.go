@@ -10,27 +10,31 @@ import (
 
 func TestRun(t *testing.T) {
 	tt := map[string]struct {
-		tokens []int
-		err    error
+		program string
+		err     error
 	}{
 		"test sample program syntactically correct": {
-			tokens: []int{lexical.Function, lexical.ID, lexical.LeftParenthesis, lexical.ID,
-				lexical.Colon, lexical.Integer, lexical.RightParenthesis, lexical.Colon,
-				lexical.Integer, lexical.LeftBraces, lexical.Var, lexical.ID, lexical.Colon,
-				lexical.Integer, lexical.Semicolon, lexical.Var, lexical.ID, lexical.Colon,
-				lexical.Integer, lexical.Semicolon, lexical.Var, lexical.ID, lexical.Colon,
-				lexical.Integer, lexical.Semicolon, lexical.ID, lexical.Equals, lexical.Numeral, lexical.Semicolon,
-				lexical.ID, lexical.Equals, lexical.Numeral, lexical.Semicolon, lexical.RightBraces, lexical.EOF},
+			program: `
+function main(arg:integer):integer
+{
+	var a:integer;
+	var b:integer;
+	var c:integer;
+	b = 1;
+	c = 2;
+}`,
 			err: nil,
 		},
 		"test sample program syntactically incorrect": {
-			tokens: []int{lexical.Function, lexical.ID, lexical.LeftParenthesis, lexical.ID,
-				lexical.Colon, lexical.Integer, lexical.RightParenthesis, lexical.Colon,
-				lexical.Integer, lexical.LeftBraces, lexical.Var, lexical.ID, lexical.Colon,
-				lexical.Integer, lexical.Semicolon, lexical.Var, lexical.ID, lexical.Colon,
-				lexical.Integer, lexical.Semicolon, lexical.Var, lexical.ID, lexical.Colon,
-				lexical.Integer, lexical.Semicolon, lexical.ID, lexical.Equals, lexical.Numeral,
-				lexical.ID, lexical.Equals, lexical.Numeral, lexical.RightBraces, lexical.EOF},
+			program: `
+function main(arg:integer):integer
+{
+	var a:integer;
+	var b:integer;
+	var c:integer
+	b = 1;
+	c = 2;
+}`,
 			err: fmt.Errorf("Syntax error"),
 		},
 	}
@@ -38,7 +42,8 @@ func TestRun(t *testing.T) {
 	for name, table := range tt {
 		t.Run(name, func(t *testing.T) {
 			syntatical, _ := NewParser("action_table.csv")
-			err := syntatical.Run(table.tokens)
+			lexer := lexical.NewLexer([]byte(table.program))
+			err := syntatical.Run(lexer)
 			assert.Equal(t, table.err, err)
 		})
 	}

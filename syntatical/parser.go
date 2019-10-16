@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 	"strconv"
+
+	"github.com/lucbarr/sslang/lexical"
 )
 
 // Parser parses the program
@@ -57,29 +59,31 @@ func buildActionTableFromFile(file string) ([][]string, error) {
 }
 
 // Run runs the lexical analysis
-func (p *Parser) Run(tokens []int) error {
+func (p *Parser) Run(lexer *lexical.Lexer) error {
 	state := 0
-	iToken := 0
-	currentToken := tokens[iToken]
-
-	nextToken := func() {
-		iToken++
-		currentToken = tokens[iToken]
-	}
-
+	currentToken, err := lexer.NextToken()
 	action := p.actionTable[state][TokenToAction[currentToken]]
 
 	for {
+		if err != nil && err != io.EOF {
+			return err
+		}
+
+		if err == io.EOF {
+			break
+		}
 
 		if accept(action) {
 			break
 		}
 
+		fmt.Println(lexical.TokenToString[currentToken])
+
 		state, ok := shift(action)
 		if ok {
 			p.stateStack = append(p.stateStack, state)
 
-			nextToken()
+			currentToken, err = lexer.NextToken()
 			action = p.actionTable[state][TokenToAction[currentToken]]
 
 			continue

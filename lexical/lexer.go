@@ -50,7 +50,7 @@ func (a *Lexer) isLiteral(s string) bool {
 func (a *Lexer) Run() ([]int, error) {
 	tokens := []int{}
 	for {
-		token, err := a.nextToken(a.program)
+		token, err := a.NextToken()
 		if err != nil && err != io.EOF {
 			return nil, err
 		}
@@ -63,6 +63,11 @@ func (a *Lexer) Run() ([]int, error) {
 		tokens = append(tokens, token)
 	}
 	return tokens, nil
+}
+
+// NextToken returns the next token
+func (a *Lexer) NextToken() (int, error) {
+	return a.nextToken(a.program)
 }
 
 func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
