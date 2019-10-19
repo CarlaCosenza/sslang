@@ -21,13 +21,13 @@ type Parser struct {
 
 // NewParser returns a parser from action table
 func NewParser(actionTableFile string) (*Parser, error) {
-	actionTable, err := buildActionTableFromFile(actionTableFile)
-	if err != nil {
-		return nil, err
-	}
+	//actionTable, err := buildActionTableFromFile(actionTableFile)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	return &Parser{
-		actionTable: actionTable,
+		actionTable: ActionTable,
 		stateStack:  []int{0},
 		out:         []int{},
 	}, nil
