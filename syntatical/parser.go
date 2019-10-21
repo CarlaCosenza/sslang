@@ -77,8 +77,6 @@ func (p *Parser) Run(lexer *lexical.Lexer) error {
 			break
 		}
 
-		fmt.Println(lexical.TokenToString[currentToken])
-
 		state, ok := shift(action)
 		if ok {
 			p.stateStack = append(p.stateStack, state)
@@ -91,12 +89,12 @@ func (p *Parser) Run(lexer *lexical.Lexer) error {
 
 		rule, ok := reduce(action)
 		if ok {
-			amountToPop := ruleNumberOfTokens[rule-1]
+			amountToPop := ruleTable[rule-1][0]
 			p.stateStack = p.stateStack[:len(p.stateStack)-amountToPop]
 
 			temporaryState := p.stateStack[len(p.stateStack)-1]
 
-			leftToken := ruleLeftTokens[rule-1]
+			leftToken := ruleTable[rule-1][1]
 			goTo := TokenToAction[leftToken]
 			stateString := p.actionTable[temporaryState][goTo]
 
@@ -121,7 +119,7 @@ func accept(s string) bool {
 	return s == "acc"
 }
 
-func reduce(s string) (int, bool) {
+func reduce(s string) (Rule, bool) {
 	if len(s) == 0 {
 		return -1, false
 	}
@@ -136,7 +134,7 @@ func reduce(s string) (int, bool) {
 		return -1, false
 	}
 
-	return n, true
+	return Rule(n), true
 }
 
 func shift(s string) (int, bool) {
