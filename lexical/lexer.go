@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strconv"
 	"strings"
 	"unicode"
 )
@@ -19,25 +18,23 @@ type Lexer struct {
 
 	identifiers map[string]int
 
-	constants []Constant
+	intConstants    []string
+	stringConstants []string
+	runeConstants   []rune
 
 	Line int
-}
-
-// Constant defines a constant type
-type Constant struct {
-	Type  int
-	Value interface{}
 }
 
 // NewLexer builds an analyser
 func NewLexer(program []byte) *Lexer {
 	programBuffer := bytes.NewBuffer(program)
 	return &Lexer{
-		identifiers: map[string]int{},
-		constants:   []Constant{},
-		program:     programBuffer,
-		Line:        0,
+		identifiers:     map[string]int{},
+		intConstants:    []string{},
+		stringConstants: []string{},
+		runeConstants:   []rune{},
+		program:         programBuffer,
+		Line:            0,
 	}
 }
 
@@ -101,7 +98,6 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 		} else {
 			token = reservedToken
 		}
-
 		buf.UnreadRune()
 
 	} else if isDigit(nextRune) {
@@ -112,12 +108,7 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 			return -1, err
 		}
 
-		val, _ := strconv.Atoi(text)
-
-		a.constants = append(a.constants, Constant{
-			Type:  Numeral,
-			Value: val,
-		})
+		a.intConstants = append(a.intConstants, text)
 		token = Numeral
 
 		buf.UnreadRune()
@@ -132,10 +123,7 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 		}
 
 		token = Stringval
-		a.constants = append(a.constants, Constant{
-			Type:  Stringval,
-			Value: text,
-		})
+		a.stringConstants = append(a.stringConstants, text)
 	} else {
 		switch nextRune {
 		case ':':
@@ -190,10 +178,7 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 			}
 
 			token = Character
-			a.constants = append(a.constants, Constant{
-				Type:  Character,
-				Value: runeCtt,
-			})
+			a.runeConstants = append(a.runeConstants, runeCtt)
 			break
 		case '&':
 			nextRune2, _, err = buf.ReadRune()
@@ -381,24 +366,6 @@ func (a *Lexer) registerIdentifier(s string) {
 		secondaryToken = len(a.identifiers)
 		a.identifiers[s] = secondaryToken
 	}
-}
-
-// GetRuneConstant returns the rune constant given its id
-func (a *Lexer) GetRuneConstant(n int) rune {
-	val, _ := a.constants[n].Value.(rune)
-	return val
-}
-
-// GetStringConstant returns the string constant given its id
-func (a *Lexer) GetStringConstant(n int) string {
-	val, _ := a.constants[n].Value.(string)
-	return val
-}
-
-// GetNumeralConstant returns the int constant given its id
-func (a *Lexer) GetNumeralConstant(n int) int {
-	val, _ := a.constants[n].Value.(int)
-	return val
 }
 
 // Identifiers retrieves the identifiers

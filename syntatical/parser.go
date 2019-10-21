@@ -21,15 +21,13 @@ type Parser struct {
 
 // NewParser returns a parser from action table
 func NewParser(actionTableFile string) (*Parser, error) {
-	actionTable, err := buildActionTableFromFile(actionTableFile)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Println(len(actionTable), len(actionTable[0]))
+	//actionTable, err := buildActionTableFromFile(actionTableFile)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	return &Parser{
-		actionTable: actionTable,
+		actionTable: ActionTable,
 		stateStack:  []int{0},
 		out:         []int{},
 	}, nil
@@ -67,8 +65,6 @@ func (p *Parser) Run(lexer *lexical.Lexer) error {
 	action := p.actionTable[state][TokenToAction[currentToken]]
 
 	for {
-		fmt.Println(lexical.TokenToString[currentToken])
-
 		if err != nil && err != io.EOF {
 			return err
 		}
@@ -80,6 +76,8 @@ func (p *Parser) Run(lexer *lexical.Lexer) error {
 		if accept(action) {
 			break
 		}
+
+		fmt.Println(lexical.TokenToString[currentToken])
 
 		state, ok := shift(action)
 		if ok {
@@ -93,12 +91,12 @@ func (p *Parser) Run(lexer *lexical.Lexer) error {
 
 		rule, ok := reduce(action)
 		if ok {
-			amountToPop := ruleTable[rule-1][0]
+			amountToPop := ruleNumberOfTokens[rule-1]
 			p.stateStack = p.stateStack[:len(p.stateStack)-amountToPop]
 
 			temporaryState := p.stateStack[len(p.stateStack)-1]
 
-			leftToken := ruleTable[rule-1][1]
+			leftToken := ruleLeftTokens[rule-1]
 			goTo := TokenToAction[leftToken]
 			stateString := p.actionTable[temporaryState][goTo]
 
@@ -106,8 +104,6 @@ func (p *Parser) Run(lexer *lexical.Lexer) error {
 			if err != nil {
 				return err
 			}
-
-			fmt.Println("reduce: ", stateString)
 
 			p.stateStack = append(p.stateStack, state)
 
@@ -125,7 +121,7 @@ func accept(s string) bool {
 	return s == "acc"
 }
 
-func reduce(s string) (Rule, bool) {
+func reduce(s string) (int, bool) {
 	if len(s) == 0 {
 		return -1, false
 	}
@@ -140,7 +136,7 @@ func reduce(s string) (Rule, bool) {
 		return -1, false
 	}
 
-	return Rule(n), true
+	return n, true
 }
 
 func shift(s string) (int, bool) {

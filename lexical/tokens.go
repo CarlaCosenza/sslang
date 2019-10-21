@@ -2,8 +2,6 @@ package lexical
 
 // Tokens
 const (
-	// this is not my language bruh
-	UNKNOWN = -1
 	// reserved words tokens
 	Array = iota
 	Boolean
@@ -60,6 +58,9 @@ const (
 
 	// end of file help token
 	EOF
+
+	// this is not my language bruh
+	UNKNOWN
 )
 
 //TokenToString is a toStr equivalent utility map
