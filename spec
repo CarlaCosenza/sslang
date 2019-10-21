@@ -24,14 +24,17 @@ LS -> S
 DV -> 'var' LI ':' T ';'
 LI -> LI ',' IDD
 LI -> IDD
-S -> 'if' '(' E ')' MT S
-S -> 'if' '(' E ')' MT S 'else' ME S
-S -> 'while' MW '(' E ')' MT S
-S -> 'do' MW S 'while' '(' E ')' ';'
-S -> NB B
-S -> LV '=' E ';'
-S -> 'break' ';'
-S -> 'continue' ';'
+S -> M
+S -> U
+U -> 'if' '(' E ')' S
+U -> 'if' '(' E ')' M 'else' U
+M -> 'if' '(' E ')' M 'else' M
+M -> 'while' '(' E ')' M
+M -> 'do' M 'while' '(' E ')' ';'
+M -> B
+M -> LV '=' E ';'
+M -> 'break' ';'
+M -> 'continue' ';'
 E -> E '&&' L
 E -> E '||' L
 E -> L
@@ -74,8 +77,8 @@ MT -> ''
 ME -> ''
 MW -> ''
 MC -> ''
-IDD -> Id
-IDU -> Id
+IDD -> ID
+IDU -> ID
 ID -> Id
 TRUE -> 'true'
 FALSE -> 'false'
