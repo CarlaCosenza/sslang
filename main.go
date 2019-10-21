@@ -13,7 +13,7 @@ func main() {
 	args := os.Args[1:]
 	if len(args) == 0 {
 		fmt.Println(`No SSL file provided.
-usage : ./ssl example.ssl`)
+	age : ./ssl example.ssl`)
 		return
 	}
 
