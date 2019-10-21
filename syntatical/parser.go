@@ -8,11 +8,13 @@ import (
 	"strconv"
 
 	"github.com/lucbarr/sslang/lexical"
+	"github.com/lucbarr/sslang/semantics"
 )
 
 // Parser parses the program
 type Parser struct {
 	actionTable [][]string
+	header      []string
 
 	stateStack []int
 
@@ -21,22 +23,31 @@ type Parser struct {
 
 // NewParser returns a parser from action table
 func NewParser(actionTableFile string) (*Parser, error) {
-	//actionTable, err := buildActionTableFromFile(actionTableFile)
-	//if err != nil {
-	//	return nil, err
-	//}
+	actionTable, header, err := buildActionTableFromFile(actionTableFile)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := lexical.Array; i <= lexical.EOF; i++ {
+		fmt.Printf("%v ", header[i])
+	}
+
+	for i := P; i <= NUM; i++ {
+		fmt.Printf("%v ", header[i])
+	}
 
 	return &Parser{
-		actionTable: ActionTable,
+		actionTable: actionTable,
+		header:      header,
 		stateStack:  []int{0},
 		out:         []int{},
 	}, nil
 }
 
-func buildActionTableFromFile(file string) ([][]string, error) {
+func buildActionTableFromFile(file string) ([][]string, []string, error) {
 	f, err := os.Open(file)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	reader := csv.NewReader(f)
@@ -44,7 +55,7 @@ func buildActionTableFromFile(file string) ([][]string, error) {
 
 	actionTable := [][]string{}
 
-	reader.Read() // skip header
+	header, _ := reader.Read() // skip header
 	for {
 		line, err := reader.Read()
 
@@ -55,7 +66,7 @@ func buildActionTableFromFile(file string) ([][]string, error) {
 		actionTable = append(actionTable, line[1:])
 	}
 
-	return actionTable, nil
+	return actionTable, header, nil
 }
 
 // Run runs the lexical analysis
@@ -64,7 +75,37 @@ func (p *Parser) Run(lexer *lexical.Lexer) error {
 	currentToken, err := lexer.NextToken()
 	action := p.actionTable[state][TokenToAction[currentToken]]
 
+	semantics := semantics.Analyser{}
+
 	for {
+		state = p.Top()
+		action = p.actionTable[state][TokenToAction[currentToken]]
+
+		s, isShift := shift(action)
+		r, isReduction := reduce(action)
+		if isShift {
+			p.stateStack = append(p.stateStack, s)
+			currentToken, err = lexer.NextToken()
+		} else if isReduction {
+			p.stateStack = p.stateStack[:len(p.stateStack)-p.Len(int(r))]
+
+			top := p.Top()
+			action = p.actionTable[top][p.Left(int(r))] // TODO
+
+			state, err := strconv.Atoi(action)
+			fmt.Println("reduce", action, top, p.Left(int(r)))
+			fmt.Println("row, column", top, p.header[p.Left(int(r))])
+			if err != nil {
+				return err
+			}
+
+			p.stateStack = append(p.stateStack, state)
+
+			semantics.Parse(r)
+		} else {
+			return fmt.Errorf("Syntax error at line %v", lexer.Line)
+		}
+
 		if err != nil && err != io.EOF {
 			return err
 		}
@@ -76,40 +117,6 @@ func (p *Parser) Run(lexer *lexical.Lexer) error {
 		if accept(action) {
 			break
 		}
-
-		state, ok := shift(action)
-		if ok {
-			p.stateStack = append(p.stateStack, state)
-
-			currentToken, err = lexer.NextToken()
-			action = p.actionTable[state][TokenToAction[currentToken]]
-
-			continue
-		}
-
-		rule, ok := reduce(action)
-		if ok {
-			amountToPop := ruleTable[rule-1][0]
-			p.stateStack = p.stateStack[:len(p.stateStack)-amountToPop]
-
-			temporaryState := p.stateStack[len(p.stateStack)-1]
-
-			leftToken := ruleTable[rule-1][1]
-			goTo := TokenToAction[leftToken]
-			stateString := p.actionTable[temporaryState][goTo]
-
-			state, err := strconv.Atoi(stateString)
-			if err != nil {
-				return err
-			}
-
-			p.stateStack = append(p.stateStack, state)
-
-			action = p.actionTable[state][TokenToAction[currentToken]]
-			continue
-		}
-
-		return fmt.Errorf("Syntax error at line %v", lexer.Line)
 	}
 
 	return nil
@@ -134,7 +141,7 @@ func reduce(s string) (Rule, bool) {
 		return -1, false
 	}
 
-	return Rule(n), true
+	return Rule(n - 1), true
 }
 
 func shift(s string) (int, bool) {
@@ -153,4 +160,16 @@ func shift(s string) (int, bool) {
 	}
 
 	return n, true
+}
+
+func (p *Parser) Len(r int) int {
+	return ruleTable[r-1][0]
+}
+
+func (p *Parser) Left(r int) int {
+	return ruleTable[r-1][1]
+}
+
+func (p *Parser) Top() int {
+	return p.stateStack[len(p.stateStack)-1]
 }
