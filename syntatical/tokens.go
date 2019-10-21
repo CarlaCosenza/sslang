@@ -4,36 +4,42 @@ import "github.com/lucbarr/sslang/lexical"
 
 // Language tokens
 const (
-	P = lexical.UNKNOWN + iota + 1
+	P = lexical.EOF + iota + 1
 	LDE
 	DE
-	DF
-	DT
 	T
+	DT
 	DC
-	LI
+	DF
 	LP
 	B
 	LDV
-	DV
 	LS
+	DV
+	LI
 	S
 	E
-	LV
 	L
 	R
 	Y
 	F
 	LE
+	LV
+	NB
+	NF
+	MF
+	MT
+	ME
+	MW
+	MC
+	IDD
+	IDU
 	ID
 	TRUE
 	FALSE
 	CHR
 	STR
 	NUM
-	PLINE
-	M
-	U
 )
 
 // TokenToAction is a table to help hop through the action table
@@ -88,40 +94,129 @@ var TokenToAction = map[int]int{
 	lexical.Stringval:        46,
 	lexical.Numeral:          47,
 	lexical.EOF:              48,
-	PLINE:                    49,
 
 	// Goto actions
-	P:     50,
-	LDE:   51,
-	DE:    52,
-	T:     53,
-	DT:    54,
-	DC:    55,
-	DF:    56,
-	LP:    57,
-	B:     58,
-	LDV:   59,
-	LS:    60,
-	DV:    61,
-	LI:    62,
-	S:     63,
-	U:     64,
-	M:     65,
-	E:     66,
-	L:     67,
-	R:     68,
-	Y:     69,
-	F:     70,
-	LE:    71,
-	LV:    72,
-	ID:    73,
-	TRUE:  74,
-	FALSE: 75,
-	CHR:   76,
-	STR:   77,
-	NUM:   78,
+	P:     49,
+	LDE:   50,
+	DE:    51,
+	T:     52,
+	DT:    53,
+	DC:    54,
+	DF:    55,
+	LP:    56,
+	B:     57,
+	LDV:   58,
+	LS:    59,
+	DV:    60,
+	LI:    61,
+	S:     62,
+	E:     63,
+	L:     64,
+	R:     65,
+	Y:     66,
+	F:     67,
+	LE:    68,
+	LV:    69,
+	NB:    70,
+	NF:    71,
+	MF:    72,
+	MT:    73,
+	ME:    74,
+	MW:    75,
+	MC:    76,
+	IDD:   77,
+	IDU:   78,
+	ID:    79,
+	TRUE:  80,
+	FALSE: 81,
+	CHR:   82,
+	STR:   83,
+	NUM:   84,
 }
 
-var ruleLeftTokens = []int{P, LDE, LDE, DE, DE, T, T, T, T, T, DT, DT, DT, DC, DC, DF, LP, LP, B, LDV, LDV, LS, LS, DV, LI, LI, S, S, U, U, M, M, M, M, M, M, M, E, E, E, L, L, L, L, L, L, L, R, R, R, Y, Y, Y, F, F, F, F, F, F, F, F, F, F, F, F, F, F, LE, LE, LV, LV, LV, ID, TRUE, FALSE, CHR, STR, NUM}
-
-var ruleNumberOfTokens = []int{1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 9, 7, 4, 5, 3, 8, 5, 3, 4, 2, 1, 2, 1, 5, 3, 1, 1, 1, 5, 7, 7, 5, 7, 1, 4, 2, 2, 3, 3, 1, 3, 3, 3, 3, 3, 3, 1, 3, 3, 1, 3, 3, 1, 1, 2, 2, 2, 2, 3, 4, 2, 2, 1, 1, 1, 1, 1, 3, 1, 3, 4, 1, 1, 1, 1, 1, 1, 1}
+var ruleTable = [85][2]int{
+	{1, P},
+	{2, LDE},
+	{1, LDE},
+	{1, DE},
+	{1, DE},
+	{1, T},
+	{1, T},
+	{1, T},
+	{1, T},
+	{1, T},
+	{9, DT},
+	{8, DT},
+	{4, DT},
+	{5, DC},
+	{3, DC},
+	{10, DF},
+	{5, LP},
+	{3, LP},
+	{4, B},
+	{2, LDV},
+	{1, LDV},
+	{2, LS},
+	{1, LS},
+	{5, DV},
+	{3, LI},
+	{1, LI},
+	{6, S},
+	{9, S},
+	{7, S},
+	{8, S},
+	{2, S},
+	{4, S},
+	{2, S},
+	{2, S},
+	{3, E},
+	{3, E},
+	{1, E},
+	{3, L},
+	{3, L},
+	{3, L},
+	{3, L},
+	{3, L},
+	{3, L},
+	{1, L},
+	{3, R},
+	{3, R},
+	{1, R},
+	{3, Y},
+	{3, Y},
+	{1, Y},
+	{1, F},
+	{2, F},
+	{2, F},
+	{2, F},
+	{2, F},
+	{3, F},
+	{5, F},
+	{2, F},
+	{2, F},
+	{1, F},
+	{1, F},
+	{1, F},
+	{1, F},
+	{1, F},
+	{3, LE},
+	{1, LE},
+	{3, LV},
+	{4, LV},
+	{1, LV},
+	{0, NB},
+	{0, NF},
+	{0, MF},
+	{0, MT},
+	{0, ME},
+	{0, MW},
+	{0, MC},
+	{1, IDD},
+	{1, IDU},
+	{1, ID},
+	{1, TRUE},
+	{1, FALSE},
+	{1, CHR},
+	{1, STR},
+	{1, NUM},
+}
