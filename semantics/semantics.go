@@ -7,6 +7,7 @@ func (a *Analyser) Parse(r int) {
 	rule := Rule(r)
 
 	switch rule {
+	case PLINE0:
 	case P0:
 	case LDE0:
 	case LDE1:
@@ -35,12 +36,15 @@ func (a *Analyser) Parse(r int) {
 	case LI1:
 	case S0:
 	case S1:
-	case S2:
-	case S3:
-	case S4:
-	case S5:
-	case S6:
-	case S7:
+	case U0:
+	case U1:
+	case M0:
+	case M1:
+	case M2:
+	case M3:
+	case M4:
+	case M5:
+	case M6:
 	case E0:
 	case E1:
 	case E2:
@@ -76,13 +80,6 @@ func (a *Analyser) Parse(r int) {
 	case LV0:
 	case LV1:
 	case LV2:
-	case NB0:
-	case NF0:
-	case MF0:
-	case MT0:
-	case ME0:
-	case MW0:
-	case MC0:
 	case IDD0:
 	case IDU0:
 	case ID0:
@@ -91,5 +88,12 @@ func (a *Analyser) Parse(r int) {
 	case CHR0:
 	case STR0:
 	case NUM0:
+	case NB0:
+	case MF0:
+	case MC0:
+	case NF0:
+	case MT0:
+	case ME0:
+	case MW0:
 	}
 }

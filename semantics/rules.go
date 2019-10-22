@@ -5,7 +5,8 @@ type Rule int
 
 // All rules enumeration
 const (
-	P0 Rule = iota
+	PLINE0 Rule = iota
+	P0
 	LDE0
 	LDE1
 	DE0
@@ -33,12 +34,15 @@ const (
 	LI1
 	S0
 	S1
-	S2
-	S3
-	S4
-	S5
-	S6
-	S7
+	U0
+	U1
+	M0
+	M1
+	M2
+	M3
+	M4
+	M5
+	M6
 	E0
 	E1
 	E2
@@ -74,13 +78,6 @@ const (
 	LV0
 	LV1
 	LV2
-	NB0
-	NF0
-	MF0
-	MT0
-	ME0
-	MW0
-	MC0
 	IDD0
 	IDU0
 	ID0
@@ -89,4 +86,11 @@ const (
 	CHR0
 	STR0
 	NUM0
+	NB0
+	MF0
+	MC0
+	NF0
+	MT0
+	ME0
+	MW0
 )
