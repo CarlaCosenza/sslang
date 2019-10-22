@@ -85,7 +85,6 @@ func (p *Parser) Run(lexer *lexical.Lexer) error {
 			if err == io.EOF {
 				currentToken = lexical.EOF
 			}
-			fmt.Println(state, currentToken)
 			action = p.actionTable[state][currentToken]
 
 			continue
