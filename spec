@@ -77,12 +77,11 @@ MT -> ''
 ME -> ''
 MW -> ''
 MC -> ''
-IDD -> ID
-IDU -> ID
+IDD -> Id
+IDU -> Id
 ID -> Id
 TRUE -> 'true'
 FALSE -> 'false'
 CHR -> c
 STR -> s
 NUM -> n
-

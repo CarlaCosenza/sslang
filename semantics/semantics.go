@@ -1,13 +1,12 @@
 package semantics
 
-import "github.com/lucbarr/sslang/syntatical"
-
 type Analyser struct {
 }
 
-func (a *Analyser) Parse(r syntatical.Rule) {
+func (a *Analyser) Parse(r int) {
+	rule := Rule(r)
 
-	switch r {
+	switch rule {
 	case P0:
 	case LDE0:
 	case LDE1:

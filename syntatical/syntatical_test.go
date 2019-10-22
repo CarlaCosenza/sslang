@@ -18,10 +18,7 @@ func TestRun(t *testing.T) {
 function main(arg:integer):integer
 {
 	var a:integer;
-	var b:integer;
-	var c:integer;
-	b = 1;
-	c = 2;
+	a = 2;
 }`,
 			err: nil,
 		},

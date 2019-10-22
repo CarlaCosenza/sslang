@@ -44,7 +44,7 @@ func TestReduce(t *testing.T) {
 	tt := map[string]struct {
 		s string
 
-		n  Rule
+		n  int
 		ok bool
 	}{
 		"test invalid rule": {
