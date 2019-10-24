@@ -330,6 +330,8 @@ func (a *Analyser) Parse(r int) {
 		a.Push(LPStatic)
 		break
 	case B0: // B -> '{' LDV LS '}'
+
+		a.f.WriteString(fmt.Sprintf("END_FUNC\n"))
 		pos, _ := a.f.Seek(0, os.SEEK_CUR)
 		a.f.Seek(int64(functionVarPos), os.SEEK_SET)
 		funct := f.T.(scope.Function)
@@ -466,7 +468,7 @@ func (a *Analyser) Parse(r int) {
 
 		t = es.Type
 
-		a.f.WriteString(fmt.Sprintf("\tJMP_BW L%d\nL%d\n", l1, l2))
+		a.f.WriteString(fmt.Sprintf("\tTJMP_BW L%d\nL%d\n", l1, l2))
 		break
 	case M2: // M -> 'do' MW M 'while' '(' E ')' ';'
 		EStatic = a.Top()
@@ -514,7 +516,7 @@ func (a *Analyser) Parse(r int) {
 
 		a.Push(E0Static)
 
-		a.f.WriteString(fmt.Sprintf("\tAND\t"))
+		a.f.WriteString(fmt.Sprintf("\tAND\n"))
 		break
 	case E1: // E -> E '||' L
 		LStatic = a.Top()
@@ -528,7 +530,7 @@ func (a *Analyser) Parse(r int) {
 
 		a.Push(E0Static)
 
-		a.f.WriteString(fmt.Sprintf("\tOR\t"))
+		a.f.WriteString(fmt.Sprintf("\tOR\n"))
 		break
 	case E2: // E -> L
 		LStatic = a.Top()
@@ -743,7 +745,7 @@ func (a *Analyser) Parse(r int) {
 		FStatic.Type = nonterminals.F
 
 		a.Push(FStatic)
-		a.f.WriteString(fmt.Sprintf("\tDE_REF%d\n", n))
+		a.f.WriteString(fmt.Sprintf("\tDE_REF %d\n", n))
 		break
 	case F1: // F -> '++' LV
 		LVStatic = a.Top()
@@ -1101,12 +1103,12 @@ func (a *Analyser) Parse(r int) {
 			lv.Type = scope.PUniversalObj
 		} else {
 			lv.Type = vart.PType
-
 			typ, ok := lv.Type.T.(scope.Type)
 			if !ok {
 				typ = scope.Type{}
 			}
 			typ.Size = vart.Size
+			a.f.WriteString(fmt.Sprintf("\tLOAD_REF %d\n", vart.Size))
 
 			lv.Type.T = typ
 		}
@@ -1286,7 +1288,7 @@ func (a *Analyser) Parse(r int) {
 		MTStatic.Attribute = mt
 		MTStatic.Type = nonterminals.MT
 
-		a.f.WriteString(fmt.Sprintf("\tJMP_FW %d\n", l))
+		a.f.WriteString(fmt.Sprintf("\tTJMP_FW L%d\n", l))
 
 		a.Push(MTStatic)
 		break
@@ -1301,7 +1303,7 @@ func (a *Analyser) Parse(r int) {
 		me.Label = l2
 		MEStatic.Type = nonterminals.ME
 
-		a.f.WriteString(fmt.Sprintf("\tJMP_FW %d\n L%d\n", l2, l1))
+		a.f.WriteString(fmt.Sprintf("\tTJMP_FW %d\n L%d\n", l2, l1))
 		a.Push(MEStatic)
 		break
 	case MW0: // MW -> ''
