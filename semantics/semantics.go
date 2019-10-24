@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/lucbarr/sslang/lexical"
 	"github.com/lucbarr/sslang/scope"
 	"github.com/lucbarr/sslang/syntatical"
 )
@@ -11,7 +12,11 @@ import (
 type Analyser struct {
 	Stack []Attribute
 	scope *scope.Analyser
+	lexer *lexical.Lexer
 	f     *os.File
+
+	nFuncs int
+	label  int
 }
 
 func NewAnalyser() *Analyser {
@@ -46,6 +51,7 @@ func (a *Analyser) Parse(r int) {
 		TStatic.Attribute = t
 
 		a.Push(TStatic)
+		break
 	case T1: // T -> 'char'
 		t := TStatic.Attribute.(T)
 		t.Type = scope.PCharObj
@@ -358,69 +364,904 @@ func (a *Analyser) Parse(r int) {
 		LI0Static.Attribute = li0
 		a.Push(LI0Static)
 		break
-
 	case LI1: // LI -> IDD
+		IDDStatic = a.Top()
+		a.Pop()
+		LI1Static = a.Top()
+		a.Pop()
+		li := LI0Static.Attribute.(LI)
+		li1 := LI1Static.Attribute.(LI)
+		li.List = li1.List
+		LI0Static.Attribute = li
+		LI0Static.Type = syntatical.LI
+
+		a.Push(LI0Static)
+		break
 	case S0: // S -> M
+		break
 	case S1: // S -> U
+		break
 	case U0: // U -> 'if' '(' E ')' MT S
+		MTStatic = a.Top()
+		a.Pop()
+		EStatic = a.Top()
+		a.Pop()
+
+		e := EStatic.Attribute.(E)
+		t = e.Type
+
+		mt := MTStatic.Attribute.(MT)
+		a.f.WriteString(fmt.Sprintf("L%d\n", mt.Label))
+		break
 	case U1: // U -> 'if' '(' E ')' MT M 'else' ME U
 	case M0: // M -> 'if' '(' E ')' MT M 'else' ME M
+		MEStatic = a.Top()
+		a.Pop()
+		MTStatic = a.Top()
+		a.Pop()
+		EStatic = a.Top()
+		a.Pop()
+
+		me := MEStatic.Attribute.(ME)
+		e := MEStatic.Attribute.(E)
+
+		l = me.Label
+		t = e.Type
+
+		a.f.WriteString(fmt.Sprintf("L%d", l))
+		break
 	case M1: // M -> 'while' MW '(' E ')' MT M
+		MTStatic = a.Top()
+		a.Pop()
+		EStatic = a.Top()
+		a.Pop()
+		MWStatic = a.Top()
+		a.Pop()
+
+		mw := MWStatic.Attribute.(MW)
+		mt := MTStatic.Attribute.(MT)
+		es := EStatic.Attribute.(E)
+
+		l1 = mw.Label
+		l2 = mt.Label
+
+		t = es.Type
+
+		a.f.WriteString(fmt.Sprintf("\tJMP_BW L%d\nL%d\n", l1, l2))
+		break
 	case M2: // M -> 'do' MW M 'while' '(' E ')' ';'
+		EStatic = a.Top()
+		a.Pop()
+		MWStatic = a.Top()
+		a.Pop()
+
+		mw := MWStatic.Attribute.(MW)
+		es := EStatic.Attribute.(E)
+
+		l = mw.Label
+		t = es.Type
+
+		a.f.WriteString(fmt.Sprintf("\tNOT\n\tTJMP_BW L%d\n", l))
+		break
 	case M3: // M -> NB B
+		a.scope.EndBlock()
+		break
 	case M4: // M -> LV '=' E ';'
+		EStatic = a.Top()
+		a.Pop()
+		LVStatic = a.Top()
+		a.Pop()
+
+		lv := LVStatic.Attribute.(LV)
+
+		t = lv.Type
+		typ := lv.Type.T.(scope.Type)
+
+		a.f.WriteString(fmt.Sprintf("\tSTORE_REF %d\n", typ.Size))
+		break
+
 	case M5: // M -> 'break' ';'
 	case M6: // M -> 'continue' ';'
+		break
 	case E0: // E -> E '&&' L
+		LStatic = a.Top()
+		a.Pop()
+		E1Static = a.Top()
+		a.Pop()
+
+		e := E0Static.Attribute.(E)
+		e.Type = scope.PBoolObj
+		E0Static.Attribute = e
+
+		a.Push(E0Static)
+
+		a.f.WriteString(fmt.Sprintf("\tAND\t"))
+		break
 	case E1: // E -> E '||' L
+		LStatic = a.Top()
+		a.Pop()
+		E1Static = a.Top()
+		a.Pop()
+
+		e := E0Static.Attribute.(E)
+		e.Type = scope.PBoolObj
+		E0Static.Attribute = e
+
+		a.Push(E0Static)
+
+		a.f.WriteString(fmt.Sprintf("\tOR\t"))
+		break
 	case E2: // E -> L
+		LStatic = a.Top()
+		a.Pop()
+
+		e := EStatic.Attribute.(E)
+		l := LStatic.Attribute.(L)
+		e.Type = l.Type
+
+		EStatic.Attribute = e
+		EStatic.Type = syntatical.E
+
+		a.Push(EStatic)
+		break
 	case L0: // L -> L '<' R
+		RStatic = a.Top()
+		a.Pop()
+		L1Static = a.Top()
+		a.Pop()
+
+		l := L0Static.Attribute.(L)
+		l.Type = scope.PBoolObj
+		L0Static.Attribute = l
+		L0Static.Type = syntatical.L
+
+		a.Push(L0Static)
+		a.f.WriteString(fmt.Sprintf("\tLT\n"))
+		break
 	case L1: // L -> L '>' R
+		RStatic = a.Top()
+		a.Pop()
+		L1Static = a.Top()
+		a.Pop()
+
+		l := L0Static.Attribute.(L)
+		l.Type = scope.PBoolObj
+		L0Static.Attribute = l
+		L0Static.Type = syntatical.L
+
+		a.Push(L0Static)
+		a.f.WriteString(fmt.Sprintf("\tGT\n"))
+		break
 	case L2: // L -> L '<=' R
+		RStatic = a.Top()
+		a.Pop()
+		L1Static = a.Top()
+		a.Pop()
+
+		l := L0Static.Attribute.(L)
+		l.Type = scope.PBoolObj
+		L0Static.Attribute = l
+		L0Static.Type = syntatical.L
+
+		a.Push(L0Static)
+		a.f.WriteString(fmt.Sprintf("\tLE\n"))
+		break
 	case L3: // L -> L '>=' R
+		RStatic = a.Top()
+		a.Pop()
+		L1Static = a.Top()
+		a.Pop()
+
+		l := L0Static.Attribute.(L)
+		l.Type = scope.PBoolObj
+		L0Static.Attribute = l
+		L0Static.Type = syntatical.L
+
+		a.Push(L0Static)
+		a.f.WriteString(fmt.Sprintf("\tGE\n"))
+		break
 	case L4: // L -> L '==' R
+		RStatic = a.Top()
+		a.Pop()
+		L1Static = a.Top()
+		a.Pop()
+
+		l := L0Static.Attribute.(L)
+		l.Type = scope.PBoolObj
+		L0Static.Attribute = l
+		L0Static.Type = syntatical.L
+
+		a.Push(L0Static)
+		a.f.WriteString(fmt.Sprintf("\tEQ\n"))
+		break
 	case L5: // L -> L '!=' R
+		RStatic = a.Top()
+		a.Pop()
+		L1Static = a.Top()
+		a.Pop()
+
+		l := L0Static.Attribute.(L)
+		l.Type = scope.PBoolObj
+		L0Static.Attribute = l
+		L0Static.Type = syntatical.L
+
+		a.Push(L0Static)
+		a.f.WriteString(fmt.Sprintf("\tNE\n"))
+		break
 	case L6: // L -> R
+		RStatic = a.Top()
+		a.Pop()
+
+		ls := LStatic.Attribute.(L)
+		rs := RStatic.Attribute.(R)
+
+		ls.Type = rs.Type
+		LStatic.Attribute = ls
+		LStatic.Type = syntatical.L
+
+		a.Push(LStatic)
+		break
 	case R0: // R -> R '+' Y
+		YStatic = a.Top()
+		a.Pop()
+		R1Static = a.Top()
+		a.Pop()
+
+		r0 := R0Static.Attribute.(R)
+		r1 := R1Static.Attribute.(R)
+		r0.Type = r1.Type
+
+		R0Static.Attribute = r0
+		R0Static.Type = syntatical.R
+
+		a.Push(R0Static)
+		a.f.WriteString(fmt.Sprintf("\tADD\n"))
+		break
 	case R1: // R -> R '-' Y
+		YStatic = a.Top()
+		a.Pop()
+		R1Static = a.Top()
+		a.Pop()
+
+		r0 := R0Static.Attribute.(R)
+		r1 := R1Static.Attribute.(R)
+		r0.Type = r1.Type
+
+		R0Static.Attribute = r0
+		R0Static.Type = syntatical.R
+
+		a.Push(R0Static)
+		a.f.WriteString(fmt.Sprintf("\tSUB\n"))
+		break
 	case R2: // R -> Y
+		YStatic = a.Top()
+		a.Pop()
+		r := RStatic.Attribute.(R)
+		y := YStatic.Attribute.(Y)
+		r.Type = y.Type
+
+		RStatic.Attribute = r
+		RStatic.Type = syntatical.R
+
+		a.Push(RStatic)
+		break
 	case Y0: // Y -> Y '*' F
+		FStatic = a.Top()
+		a.Pop()
+		Y1Static = a.Top()
+		a.Pop()
+
+		y0 := Y0Static.Attribute.(Y)
+		y1 := Y1Static.Attribute.(Y)
+		y0.Type = y1.Type
+
+		Y0Static.Attribute = y0
+		Y0Static.Type = syntatical.Y
+		a.Push(Y0Static)
+
+		a.f.WriteString(fmt.Sprintf("\tMUL\n"))
+		break
 	case Y1: // Y -> Y '/' F
+		FStatic = a.Top()
+		a.Pop()
+		Y1Static = a.Top()
+		a.Pop()
+
+		y0 := Y0Static.Attribute.(Y)
+		y1 := Y1Static.Attribute.(Y)
+		y0.Type = y1.Type
+
+		Y0Static.Attribute = y0
+		Y0Static.Type = syntatical.Y
+		a.Push(Y0Static)
+
+		a.f.WriteString(fmt.Sprintf("\tDIV\n"))
+		break
 	case Y2: // Y -> F
+		FStatic = a.Top()
+		a.Pop()
+
+		y := YStatic.Attribute.(Y)
+		f := FStatic.Attribute.(F)
+		y.Type = f.Type
+		Y0Static.Attribute = y
+		Y0Static.Type = syntatical.Y
+
+		a.Push(Y0Static)
+		break
 	case F0: // F -> LV
+		LVStatic = a.Top()
+		a.Pop()
+
+		lv := LVStatic.Attribute.(LV)
+		typ := lv.Type.T.(scope.Type)
+
+		n = typ.Size
+
+		f := FStatic.Attribute.(F)
+		f.Type = lv.Type
+		FStatic.Attribute = f
+		FStatic.Type = syntatical.F
+
+		a.Push(FStatic)
+		a.f.WriteString(fmt.Sprintf("\tDE_REF%d\n", n))
+		break
 	case F1: // F -> '++' LV
+		LVStatic = a.Top()
+		a.Pop()
+
+		lv := LVStatic.Attribute.(LV)
+		t = lv.Type
+
+		fs := FStatic.Attribute.(F)
+		fs.Type = scope.PIntObj
+		FStatic.Attribute = fs
+		FStatic.Type = syntatical.F
+
+		a.Push(FStatic)
+		a.f.WriteString(fmt.Sprintf("\tDUP\n\tDUP\n\tDE_REF 1\n"))
+		a.f.WriteString(fmt.Sprintf("\tINC\n\tSTORE_REF 1\n\tDE_REF 1\n"))
+		break
 	case F2: // F -> '--' LV
+		LVStatic = a.Top()
+		a.Pop()
+
+		lv := LVStatic.Attribute.(LV)
+		t = lv.Type
+
+		fs := FStatic.Attribute.(F)
+		fs.Type = lv.Type
+		FStatic.Attribute = fs
+		FStatic.Type = syntatical.F
+
+		a.Push(FStatic)
+		a.f.WriteString(fmt.Sprintf("\tDUP\n\tDUP\n\tDE_REF 1\n"))
+		a.f.WriteString(fmt.Sprintf("\tINC\n\tSTORE_REF 1\n\tDE_REF 1\n"))
+		break
 	case F3: // F -> LV '++'
+		LVStatic = a.Top()
+		a.Pop()
+
+		lv := LVStatic.Attribute.(LV)
+		t = lv.Type
+
+		fs := FStatic.Attribute.(F)
+		fs.Type = lv.Type
+		FStatic.Attribute = fs
+		FStatic.Type = syntatical.F
+
+		a.Push(FStatic)
+		a.f.WriteString(fmt.Sprintf("\tDUP\n\tDUP\n\tDE_REF 1\n"))
+		a.f.WriteString(fmt.Sprintf("\tINC\n\tSTORE_REF 1\n\tDE_REF 1\n"))
+		a.f.WriteString(fmt.Sprintf("\tDEC\n"))
+		break
 	case F4: // F -> LV '--'
+		LVStatic = a.Top()
+		a.Pop()
+
+		lv := LVStatic.Attribute.(LV)
+		t = lv.Type
+
+		fs := FStatic.Attribute.(F)
+		fs.Type = t
+		FStatic.Attribute = fs
+		FStatic.Type = syntatical.F
+
+		a.Push(FStatic)
+		a.f.WriteString(fmt.Sprintf("\tDUP\n\tDUP\n\tDE_REF 1\n"))
+		a.f.WriteString(fmt.Sprintf("\tDEC\n\tSTORE_REF 1\n\tDE_REF 1\n"))
+		a.f.WriteString(fmt.Sprintf("\tINC\n"))
+		break
 	case F5: // F -> '(' E ')'
+		EStatic = a.Top()
+		a.Pop()
+
+		fs := FStatic.Attribute.(F)
+		es := EStatic.Attribute.(E)
+		fs.Type = es.Type
+		FStatic.Attribute = fs
+
+		a.Push(FStatic)
+		break
 	case F6: // F -> IDU MC '(' LE ')'
+		LEStatic = a.Top()
+		a.Pop()
+		MCStatic = a.Top()
+		a.Pop()
+		IDUStatic = a.Top()
+		a.Pop()
+
+		id := IDUStatic.Attribute.(ID)
+		f = id.Object
+
+		fs := FStatic.Attribute.(F)
+		ms := MCStatic.Attribute.(MC)
+		fs.Type = ms.Type
+		FStatic.Attribute = fs
+		FStatic.Type = syntatical.F
+
+		a.Push(FStatic)
+
+		funct := f.T.(scope.Function)
+		a.f.WriteString(fmt.Sprintf("\tCALL %d\n", funct.Index))
+		break
 	case F7: // F -> '-' F
+		F1Static = a.Top()
+		a.Pop()
+
+		f1 := F1Static.Attribute.(F)
+		t = f1.Type
+
+		f0 := F0Static.Attribute.(F)
+		f0.Type = t
+		F0Static.Attribute = f0
+		F0Static.Type = syntatical.F
+
+		a.Push(F0Static)
+		a.f.WriteString(fmt.Sprintf("\tNEG\n"))
+		break
 	case F8: // F -> '!' F
+		F1Static = a.Top()
+		a.Pop()
+
+		f1 := F1Static.Attribute.(F)
+		t = f1.Type
+
+		f0 := F0Static.Attribute.(F)
+		f0.Type = t
+		F0Static.Attribute = f0
+		F0Static.Type = syntatical.F
+
+		a.Push(F0Static)
+		a.f.WriteString(fmt.Sprintf("\tNOT\n"))
+		break
 	case F9: // F -> TRUE
+		TRUStatic = a.Top()
+		a.Pop()
+
+		fs := FStatic.Attribute.(F)
+		fs.Type = scope.PBoolObj
+		FStatic.Attribute = fs
+		FStatic.Type = syntatical.F
+
+		a.Push(FStatic)
+
+		a.f.WriteString(fmt.Sprintf("\tLOAD_CONST %d\n", a.lexer.SecondaryToken))
+		break
 	case F10: // F -> FALSE
+		FALSStatic = a.Top()
+		a.Pop()
+
+		fs := FStatic.Attribute.(F)
+		fs.Type = scope.PBoolObj
+
+		FStatic.Attribute = fs
+		FStatic.Type = syntatical.F
+
+		a.Push(FStatic)
+
+		a.f.WriteString(fmt.Sprintf("\tLOAD_CONST %d\n", a.lexer.SecondaryToken))
+		break
 	case F11: // F -> CHR
+		CHRStatic = a.Top()
+		a.Pop()
+
+		fs := FStatic.Attribute.(F)
+		fs.Type = scope.PCharObj
+
+		FStatic.Attribute = fs
+		FStatic.Type = syntatical.F
+
+		a.Push(FStatic)
+
+		n = a.lexer.SecondaryToken
+		a.f.WriteString(fmt.Sprintf("\tLOAD_CONST %d\n", n))
+		break
 	case F12: // F -> STR
+		STRStatic = a.Top()
+		a.Pop()
+
+		fs := FStatic.Attribute.(F)
+		fs.Type = scope.PStringObj
+
+		FStatic.Attribute = fs
+		FStatic.Type = syntatical.F
+
+		a.Push(FStatic)
+
+		n = a.lexer.SecondaryToken
+		a.f.WriteString(fmt.Sprintf("\tLOAD_CONST %d\n", n))
+		break
 	case F13: // F -> NUM
+		NUMStatic = a.Top()
+		a.Pop()
+
+		fs := FStatic.Attribute.(F)
+		fs.Type = scope.PIntObj
+
+		FStatic.Attribute = fs
+		FStatic.Type = syntatical.F
+
+		a.Push(FStatic)
+
+		n = a.lexer.SecondaryToken
+		a.f.WriteString(fmt.Sprintf("\tLOAD_CONST %d\n", n))
+		break
 	case LE0: // LE -> LE ',' E
+		EStatic = a.Top()
+		a.Pop()
+		LE1Static = a.Top()
+		a.Pop()
+
+		le0 := LE0Static.Attribute.(LE)
+		le1 := LE1Static.Attribute.(LE)
+		le0.Param = nil
+		le0.Err = le1.Err
+		LE0Static.Attribute = le0
+
+		n = le1.N
+		if le1.Err != 0 {
+			p = le1.Param
+			if p == nil {
+				le0 := LE0Static.Attribute.(LE)
+				le0.Err = 1
+				LE0Static.Attribute = le0
+			} else {
+				le0 := LE0Static.Attribute.(LE)
+				le0.Param = p.Next
+				le0.N = n + 1
+				LE0Static.Attribute = le0
+			}
+		}
+
+		LE0Static.Type = syntatical.LE
+		a.Push(LE0Static)
+		break
 	case LE1: // LE -> E
+		EStatic = a.Top()
+		a.Pop()
+		MCStatic = a.Top()
+
+		le := LEStatic.Attribute.(LE)
+		mc := MCStatic.Attribute.(MC)
+		le.Param = nil
+		le.Err = mc.Err
+		LEStatic.Attribute = le
+		n = 1
+
+		if mc.Err != 0 {
+			p = mc.Param
+			if p == nil {
+				le := LEStatic.Attribute.(LE)
+				le.Err = 1
+				LEStatic.Attribute = le
+			} else {
+				le := LEStatic.Attribute.(LE)
+				le.Param = p.Next
+				le.N = n + 1
+				LEStatic.Attribute = le
+			}
+		}
+
+		LEStatic.Type = syntatical.LE
+		a.Push(LEStatic)
 	case LV0: // LV -> LV '.' IDU
+		IDStatic = a.Top()
+		a.Pop()
+		LV1Static = a.Top()
+		a.Pop()
+
+		lv1 := LV1Static.Attribute.(LV)
+		t = lv1.Type
+
+		if t.Kind != scope.KindStructType {
+			if t.Kind != scope.KindUniversal {
+				// TODO
+			}
+			lv0 := LV0Static.Attribute.(LV)
+			lv0.Type = scope.PUniversalObj
+			LV0Static.Attribute = lv0
+		} else {
+			st := t.T.(scope.Struct)
+			p = st.Fields
+
+			for p != nil {
+				if ids := IDStatic.Attribute.(ID); p.Name == ids.Name {
+					break
+				}
+				p = p.Next
+			}
+
+			if p == nil {
+				lv0 := LV0Static.Attribute.(LV)
+				lv0.Type = scope.PUniversalObj
+				LV0Static.Attribute = lv0
+			} else {
+				lv0 := LV0Static.Attribute.(LV)
+				field := p.T.(scope.Field)
+				lv0.Type = field.PType
+
+				typ := lv0.Type.T.(scope.Type)
+				typ.Size = field.Size
+				lv0.Type.T = typ
+
+				LV0Static.Attribute = lv0
+
+				a.f.WriteString(fmt.Sprintf("\tADD %d", field.Index))
+			}
+		}
+
+		LV0Static.Type = syntatical.LV
+		a.Push(LV0Static)
+		break
 	case LV1: // LV -> LV '[' E ']'
+		EStatic = a.Top()
+		a.Pop()
+		LV1Static = a.Top()
+		a.Pop()
+
+		t = LV1Static.Attribute.(LV).Type
+
+		lv0 := LV0Static.Attribute.(LV)
+		if a.scope.CheckTypes(t, scope.PStringObj) {
+			lv0.Type = scope.PCharObj
+		} else if t.Kind == scope.KindArrayType {
+			if t.Kind == scope.KindUniversal {
+				//err ??
+			}
+			lv0.Type = scope.PUniversalObj
+		} else {
+			elemType := t.T.(scope.Array).ElemType
+			lv0.Type = elemType
+			n = elemType.T.(scope.Type).Size
+
+			a.f.WriteString(fmt.Sprintf("\tMUL %d\n\tADD\n", n))
+		}
+
+		// if a.scope.CheckTypes(EStatic.Attribute.(E).Type, scope.PIntObj)
+
+		LV0Static.Type = syntatical.LV
+		LV0Static.Attribute = lv0
+		break
 	case LV2: // LV -> IDU
+		IDUStatic = a.Top()
+		a.Pop()
+
+		p = IDUStatic.Attribute.(ID).Object
+		lv := LVStatic.Attribute.(LV)
+		if p.Kind != scope.KindVar && p.Kind != scope.KindParam {
+			if p.Kind != scope.KindUniversal {
+				// err ?
+			}
+			lv.Type = scope.PUniversalObj
+		} else {
+			lv.Type = p.T.(scope.Var).PType
+
+			typ := lv.Type.T.(scope.Type)
+			typ.Size = p.T.(scope.Var).Size
+
+			lv.Type.T = typ
+		}
+		LVStatic.Attribute = lv
+
+		LVStatic.Type = syntatical.LV
+
+		t = lv.Type
+
+		a.Push(LVStatic)
+		break
 	case IDD0: // IDD -> Id
+		name = a.lexer.SecondaryToken
+		ids := IDDStatic.Attribute.(ID)
+		ids.Name = name
+
+		if a.scope.SearchLocalSymbol(name) != nil {
+			// err ?
+		} else {
+			p = a.scope.DefineSymbol(name)
+		}
+
+		ids.Object = p
+		IDDStatic.Attribute = ids
+
+		a.Push(IDDStatic)
+		break
 	case IDU0: // IDU -> Id
+		name = a.lexer.SecondaryToken
+		idu := IDUStatic.Attribute.(ID)
+		idu.Name = name
+
+		if a.scope.SearchGlobalSymbol(name) != nil {
+			// err ?
+			p = a.scope.DefineSymbol(name)
+		}
+
+		idu.Object = p
+		IDDStatic.Attribute = idu
+
+		a.Push(IDUStatic)
+		break
 	case ID0: // ID -> Id
+		name = a.lexer.SecondaryToken
+		ids := IDStatic.Attribute.(ID)
+		ids.Name = name
+		ids.Object = nil
+		IDDStatic.Attribute = ids
+		a.Push(IDDStatic)
+		break
 	case TRUE0: // TRUE ->  'true'
+		tru := TRUStatic.Attribute.(TRUE)
+		tru.Type = scope.PBoolObj
+		tru.Val = 1
+
+		TRUStatic.Type = syntatical.TRUE
+		TRUStatic.Attribute = tru
+
+		a.Push(TRUStatic)
+		break
 	case FALSE0: // FALSE -> 'false'
+		fals := TRUStatic.Attribute.(TRUE)
+		fals.Type = scope.PBoolObj
+		fals.Val = 0
+
+		FALSStatic.Type = syntatical.FALSE
+		FALSStatic.Attribute = fals
+
+		a.Push(FALSStatic)
+		break
 	case CHR0: // CHR -> c
+		chr := CHRStatic.Attribute.(CHR)
+		chr.Type = scope.PCharObj
+		chr.Pos = a.lexer.SecondaryToken
+		chr.Val = a.lexer.GetRuneConstant(a.lexer.SecondaryToken)
+
+		CHRStatic.Type = syntatical.CHR
+		CHRStatic.Attribute = chr
+
+		a.Push(CHRStatic)
+		break
 	case STR0: // STR -> s
+		str := STRStatic.Attribute.(STR)
+		str.Type = scope.PStringObj
+		str.Pos = a.lexer.SecondaryToken
+		str.Val = a.lexer.GetStringConstant(a.lexer.SecondaryToken)
+
+		STRStatic.Type = syntatical.STR
+		STRStatic.Attribute = str
+
+		a.Push(STRStatic)
+		break
 	case NUM0: // NUM -> n
+		num := NUMStatic.Attribute.(NUM)
+		num.Type = scope.PStringObj
+		num.Pos = a.lexer.SecondaryToken
+		num.Val = a.lexer.GetNumeralConstant(a.lexer.SecondaryToken)
+
+		NUMStatic.Type = syntatical.NUM
+		NUMStatic.Attribute = num
+
+		a.Push(NUMStatic)
+		break
 	case NB0: // NB -> ''
+		a.scope.NewBlock()
+		break
 	case MF0: // MF -> ''
+		TStatic = a.Top()
+		a.Pop()
+		LPStatic = a.Top()
+		a.Pop()
+		IDDStatic = a.Top()
+		a.Pop()
+
+		f = IDDStatic.Attribute.(ID).Object
+		ts := TStatic.Attribute.(T)
+		lp := LPStatic.Attribute.(LP)
+
+		f.Kind = scope.KindFunction
+		funct := f.T.(scope.Function)
+		funct.PRetType = ts.Type
+		funct.PParams = lp.List
+		funct.Params = LPStatic.Size
+		funct.Vars = 0
+		f.T = funct
+		curFunction = f
+
+		a.f.WriteString(fmt.Sprintf("BEGIN_FUNC %d, %d, %02d\n", funct.Index, funct.Params, 0))
+		pos, _ := a.f.Seek(0, os.SEEK_CUR)
+		functionVarPos = int(pos) - 3
+		break
 	case MC0: // MC -> ''
+		IDUStatic = a.Top()
+		f = IDUStatic.Attribute.(ID).Object
+
+		mc := MCStatic.Attribute.(MC)
+		if f.Kind != scope.KindFunction {
+			mc.Type = scope.PUniversalObj
+			mc.Param = nil
+			mc.Err = 1
+			// err ?
+		} else {
+			mc.Type = f.T.(scope.Function).PRetType
+			mc.Param = f.T.(scope.Function).PParams
+			mc.Err = 0
+		}
+
+		MCStatic.Attribute = mc
+		MCStatic.Type = syntatical.MC
+
+		a.Push(MCStatic)
+		break
 	case NF0: // NF -> ''
+		IDDStatic = a.Top()
+
+		f = IDDStatic.Attribute.(ID).Object
+
+		f.Kind = scope.KindFunction
+		funct := f.T.(scope.Function)
+		funct.Params = 0
+		funct.Vars = 0
+		funct.Index = a.nFuncs
+		a.nFuncs++
+		a.scope.NewBlock()
+		break
 	case MT0: // MT -> ''
+		l = a.label
+		a.label++
+
+		mt := MTStatic.Attribute.(MT)
+		mt.Label = l
+
+		MTStatic.Attribute = mt
+		MTStatic.Type = syntatical.MT
+
+		a.f.WriteString(fmt.Sprintf("\tJMP_FW %d\n", l))
+
+		a.Push(MTStatic)
+		break
 	case ME0: // ME -> ''
+		MTStatic = a.Top()
+		l1 := MTStatic.Attribute.(MT).Label
+
+		l2 := a.label
+		a.label++
+
+		me := MEStatic.Attribute.(ME)
+		me.Label = l2
+		MEStatic.Type = syntatical.ME
+
+		a.f.WriteString(fmt.Sprintf("\tJMP_FW %d\n L%d\n", l2, l1))
+		a.Push(MEStatic)
+		break
 	case MW0: // MW -> ''
+		l = a.label
+		a.label++
+		mw := MWStatic.Attribute.(MW)
+		mw.Label = l
+		MWStatic.Attribute = mw
+
+		a.f.WriteString(fmt.Sprintf("\tL%d", l))
+		a.Push(MWStatic)
+		break
 	}
 }
 
