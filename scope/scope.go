@@ -24,21 +24,28 @@ const (
 	KindUndefined = -1
 )
 
+func (k Kind) IsType() bool {
+	return k == KindArrayType ||
+		k == KindStructType ||
+		k == KindAliasType ||
+		k == KindScalarType
+}
+
 var (
-	intObj  = Object{-1, nil, KindScalarType, nil}
-	pIntObj = &intObj
+	IntObj  = Object{-1, nil, KindScalarType, nil}
+	PIntObj = &IntObj
 
-	charObj  = Object{-1, nil, KindScalarType, nil}
-	pCharObj = &charObj
+	CharObj  = Object{-1, nil, KindScalarType, nil}
+	PCharObj = &CharObj
 
-	boolObj  = Object{-1, nil, KindScalarType, nil}
-	pBoolObj = &boolObj
+	BoolObj  = Object{-1, nil, KindScalarType, nil}
+	PBoolObj = &BoolObj
 
-	stringObj  = Object{-1, nil, KindScalarType, nil}
-	pStringObj = &stringObj
+	StringObj  = Object{-1, nil, KindScalarType, nil}
+	PStringObj = &StringObj
 
-	universalObj  = Object{-1, nil, KindScalarType, nil}
-	pUniversalObj = &universalObj
+	UniversalObj  = Object{-1, nil, KindScalarType, nil}
+	PUniversalObj = &UniversalObj
 )
 
 // Object defines a scope object
@@ -65,6 +72,14 @@ type Alias struct {
 
 func (a Alias) objType() {}
 
+// Type defines the alias object type
+type Type struct {
+	BaseType *Object
+	Size     int
+}
+
+func (a Type) objType() {}
+
 // Array defines the array object type
 type Array struct {
 	ElemType    *Object
@@ -81,6 +96,44 @@ type Struct struct {
 }
 
 func (a Struct) objType() {}
+
+// Function defines the function object type
+type Function struct {
+	PRetType *Object
+	PParams  *Object
+	Index    int
+	Params   int
+	Vars     int
+}
+
+func (a Function) objType() {}
+
+// Var defines the var object type
+type Var struct {
+	PType *Object
+	Index int
+	Size  int
+}
+
+func (a Var) objType() {}
+
+// Param defines the var object type
+type Param struct {
+	PType *Object
+	Index int
+	Size  int
+}
+
+func (a Param) objType() {}
+
+// Field defines the var object type
+type Field struct {
+	PType *Object
+	Index int
+	Size  int
+}
+
+func (a Field) objType() {}
 
 // Analyser is the scope analyser
 type Analyser struct {
@@ -117,10 +170,7 @@ func (a *Analyser) DefineSymbol(name int) *Object {
 func (a *Analyser) SearchLocalSymbol(name int) *Object {
 	obj := a.symbolTable[a.level]
 
-	for {
-		if obj == nil {
-			break
-		}
+	for obj != nil {
 
 		if obj.Name == name {
 			return obj
@@ -136,14 +186,10 @@ func (a *Analyser) SearchLocalSymbol(name int) *Object {
 func (a *Analyser) SearchGlobalSymbol(name int) *Object {
 	var obj *Object
 
-	for i := a.level - 1; i >= 0; i-- {
+	for i := a.level; i >= 0; i-- {
 		obj = a.symbolTable[i]
 
-		for {
-			if obj == nil {
-				break
-			}
-
+		for obj != nil {
 			if obj.Name == name {
 				return obj
 			}
@@ -160,7 +206,7 @@ func (a *Analyser) SearchGlobalSymbol(name int) *Object {
 func (a *Analyser) CheckTypes(p1, p2 *Object) bool {
 	if p1 == p2 {
 		return true
-	} else if p1 == pUniversalObj || p2 == pUniversalObj {
+	} else if p1 == PUniversalObj || p2 == PUniversalObj {
 		return true
 	} else if p1.Kind == KindUniversal || p2.Kind == KindUniversal {
 		return true

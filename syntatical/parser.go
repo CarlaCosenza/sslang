@@ -8,6 +8,8 @@ import (
 	"strconv"
 
 	"github.com/lucbarr/sslang/lexical"
+	"github.com/lucbarr/sslang/nonterminals"
+	"github.com/lucbarr/sslang/semantics"
 )
 
 // Parser parses the program
@@ -25,8 +27,6 @@ func NewParser(actionTableFile string) (*Parser, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println(len(actionTable), len(actionTable[0]))
 
 	return &Parser{
 		actionTable: actionTable,
@@ -64,11 +64,12 @@ func buildActionTableFromFile(file string) ([][]string, error) {
 func (p *Parser) Run(lexer *lexical.Lexer) error {
 	state := 0
 	currentToken, err := lexer.NextToken()
-	action := p.actionTable[state][TokenToAction[currentToken]]
+	action := p.actionTable[state][currentToken]
+
+	sem := semantics.NewAnalyser(lexer)
+	defer sem.Close()
 
 	for {
-		fmt.Println(lexical.TokenToString[currentToken])
-
 		if err != nil && err != io.EOF {
 			return err
 		}
@@ -86,32 +87,34 @@ func (p *Parser) Run(lexer *lexical.Lexer) error {
 			p.stateStack = append(p.stateStack, state)
 
 			currentToken, err = lexer.NextToken()
-			action = p.actionTable[state][TokenToAction[currentToken]]
+			if err == io.EOF {
+				currentToken = lexical.EOF
+			}
+			action = p.actionTable[state][currentToken]
 
 			continue
 		}
 
 		rule, ok := reduce(action)
 		if ok {
-			amountToPop := ruleTable[rule-1][0]
+			amountToPop := nonterminals.RuleNumberOfTokens[rule-1]
 			p.stateStack = p.stateStack[:len(p.stateStack)-amountToPop]
 
 			temporaryState := p.stateStack[len(p.stateStack)-1]
 
-			leftToken := ruleTable[rule-1][1]
-			goTo := TokenToAction[leftToken]
-			stateString := p.actionTable[temporaryState][goTo]
+			leftToken := nonterminals.RuleLeftTokens[rule-1]
+			stateString := p.actionTable[temporaryState][leftToken]
 
 			state, err := strconv.Atoi(stateString)
 			if err != nil {
 				return err
 			}
 
-			fmt.Println("reduce: ", stateString)
-
 			p.stateStack = append(p.stateStack, state)
 
-			action = p.actionTable[state][TokenToAction[currentToken]]
+			action = p.actionTable[state][currentToken]
+
+			sem.Parse(rule)
 			continue
 		}
 
@@ -125,7 +128,7 @@ func accept(s string) bool {
 	return s == "acc"
 }
 
-func reduce(s string) (Rule, bool) {
+func reduce(s string) (int, bool) {
 	if len(s) == 0 {
 		return -1, false
 	}
@@ -140,7 +143,7 @@ func reduce(s string) (Rule, bool) {
 		return -1, false
 	}
 
-	return Rule(n), true
+	return n, true
 }
 
 func shift(s string) (int, bool) {

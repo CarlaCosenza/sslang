@@ -21,7 +21,8 @@ type Lexer struct {
 
 	constants []Constant
 
-	Line int
+	Line           int
+	SecondaryToken int
 }
 
 // Constant defines a constant type
@@ -114,11 +115,8 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 
 		val, _ := strconv.Atoi(text)
 
-		a.constants = append(a.constants, Constant{
-			Type:  Numeral,
-			Value: val,
-		})
 		token = Numeral
+		a.SecondaryToken = a.addNumeralConstant(val)
 
 		buf.UnreadRune()
 	} else if nextRune == '"' {
@@ -132,10 +130,7 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 		}
 
 		token = Stringval
-		a.constants = append(a.constants, Constant{
-			Type:  Stringval,
-			Value: text,
-		})
+		a.SecondaryToken = a.addStringConstant(text)
 	} else {
 		switch nextRune {
 		case ':':
@@ -190,10 +185,7 @@ func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {
 			}
 
 			token = Character
-			a.constants = append(a.constants, Constant{
-				Type:  Character,
-				Value: runeCtt,
-			})
+			a.SecondaryToken = a.addRuneConstant(runeCtt)
 			break
 		case '&':
 			nextRune2, _, err = buf.ReadRune()
@@ -381,6 +373,8 @@ func (a *Lexer) registerIdentifier(s string) {
 		secondaryToken = len(a.identifiers)
 		a.identifiers[s] = secondaryToken
 	}
+
+	a.SecondaryToken = secondaryToken
 }
 
 // GetRuneConstant returns the rune constant given its id
@@ -399,6 +393,33 @@ func (a *Lexer) GetStringConstant(n int) string {
 func (a *Lexer) GetNumeralConstant(n int) int {
 	val, _ := a.constants[n].Value.(int)
 	return val
+}
+
+// setRuneConstant returns the rune constant given its id
+func (a *Lexer) addRuneConstant(n rune) int {
+	a.constants = append(a.constants, Constant{
+		Type:  Character,
+		Value: n,
+	})
+	return len(a.constants) - 1
+}
+
+// addStringConstant returns the string constant given its id
+func (a *Lexer) addStringConstant(n string) int {
+	a.constants = append(a.constants, Constant{
+		Type:  String,
+		Value: n,
+	})
+	return len(a.constants) - 1
+}
+
+// addNumeralConstant returns the int constant given its id
+func (a *Lexer) addNumeralConstant(n int) int {
+	a.constants = append(a.constants, Constant{
+		Type:  Numeral,
+		Value: n,
+	})
+	return len(a.constants) - 1
 }
 
 // Identifiers retrieves the identifiers

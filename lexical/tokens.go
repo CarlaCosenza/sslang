@@ -5,62 +5,64 @@ const (
 	// this is not my language bruh
 	UNKNOWN = -1
 	// reserved words tokens
-	Array = iota
-	Boolean
-	Break
+	Integer = iota
 	Char
-	Continue
-	Do
-	Else
-	Function
-	If
-	Integer
-	Of
+	Boolean
 	String
-	Struct
-	True
-	False
 	Type
-	Var
-	While
-
-	// symbols
-	Colon
-	Semicolon
-	Comma
 	Equals
+	Array
 	LeftSquare
 	RightSquare
+	Of
+	Struct
 	LeftBraces
 	RightBraces
+	Semicolon
+	Colon
+	Function
 	LeftParenthesis
 	RightParenthesis
+	Comma
+	Var
+	If
+	Else
+	While
+	Do
+	Break
+	Continue
 	And
 	Or
 	LessThan
 	GreaterThan
 	LessOrEqual
 	GreaterOrEqual
-	NotEqual
 	EqualEqual
+	NotEqual
 	Plus
-	PlusPlus
 	Minus
-	MinusMinus
 	Times
 	Divide
-	Dot
+	PlusPlus
+	MinusMinus
 	Not
+	Dot
+	ID
+	True
+	False
+
+	// symbols
 
 	// regular tokens
 	Character
-	Numeral
 	Stringval
-	ID
+	Numeral
 
 	// end of file help token
 	EOF
 )
+
+const UNKNOWN = -1
 
 //TokenToString is a toStr equivalent utility map
 var TokenToString = map[int]string{
