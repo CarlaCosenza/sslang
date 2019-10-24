@@ -159,6 +159,52 @@ type NUM struct {
 	Val  int
 }
 
+func init() {
+	IDDStatic.Attribute = ID{}
+	IDUStatic.Attribute = ID{}
+	IDStatic.Attribute = ID{}
+	TStatic.Attribute = T{}
+	LIStatic.Attribute = LI{}
+	LI0Static.Attribute = LI{}
+	LI1Static.Attribute = LI{}
+	TRUStatic.Attribute = TRUE{}
+	FALSStatic.Attribute = FALSE{}
+	STRStatic.Attribute = STR{}
+	CHRStatic.Attribute = CHR{}
+	NUMStatic.Attribute = NUM{}
+	DCStatic.Attribute = DC{}
+	DC0Static.Attribute = DC{}
+	DC1Static.Attribute = DC{}
+	LPStatic.Attribute = LP{}
+	LP0Static.Attribute = LP{}
+	LP1Static.Attribute = LP{}
+	EStatic.Attribute = E{}
+	E0Static.Attribute = E{}
+	E1Static.Attribute = E{}
+	LStatic.Attribute = L{}
+	L0Static.Attribute = L{}
+	L1Static.Attribute = L{}
+	RStatic.Attribute = R{}
+	R0Static.Attribute = R{}
+	R1Static.Attribute = R{}
+	YStatic.Attribute = Y{}
+	Y0Static.Attribute = Y{}
+	Y1Static.Attribute = Y{}
+	FStatic.Attribute = F{}
+	F0Static.Attribute = F{}
+	F1Static.Attribute = F{}
+	LVStatic.Attribute = LV{}
+	LV0Static.Attribute = LV{}
+	LV1Static.Attribute = LV{}
+	MCStatic.Attribute = MC{}
+	LEStatic.Attribute = LE{}
+	LE0Static.Attribute = LE{}
+	LE1Static.Attribute = LE{}
+	MTStatic.Attribute = MT{}
+	MEStatic.Attribute = ME{}
+	MWStatic.Attribute = MW{}
+}
+
 var IDDStatic, IDUStatic, IDStatic, TStatic, LIStatic, LI0Static, LI1Static, TRUStatic, FALSStatic, STRStatic, CHRStatic, NUMStatic, DCStatic, DC0Static, DC1Static, LPStatic, LP0Static, LP1Static, EStatic, E0Static, E1Static, LStatic, L0Static, L1Static, RStatic, R0Static, R1Static, YStatic, Y0Static, Y1Static, FStatic, F0Static, F1Static, LVStatic, LV0Static, LV1Static, MCStatic, LEStatic, LE0Static, LE1Static, MTStatic, MEStatic, MWStatic, NBStatic Attribute
 
 var p, t, f *scope.Object

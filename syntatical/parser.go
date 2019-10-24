@@ -8,6 +8,8 @@ import (
 	"strconv"
 
 	"github.com/lucbarr/sslang/lexical"
+	"github.com/lucbarr/sslang/nonterminals"
+	"github.com/lucbarr/sslang/semantics"
 )
 
 // Parser parses the program
@@ -64,7 +66,8 @@ func (p *Parser) Run(lexer *lexical.Lexer) error {
 	currentToken, err := lexer.NextToken()
 	action := p.actionTable[state][currentToken]
 
-	//sem := semantics.NewAnalyser()
+	sem := semantics.NewAnalyser(lexer)
+	defer sem.Close()
 
 	for {
 		if err != nil && err != io.EOF {
@@ -94,12 +97,12 @@ func (p *Parser) Run(lexer *lexical.Lexer) error {
 
 		rule, ok := reduce(action)
 		if ok {
-			amountToPop := ruleNumberOfTokens[rule-1]
+			amountToPop := nonterminals.RuleNumberOfTokens[rule-1]
 			p.stateStack = p.stateStack[:len(p.stateStack)-amountToPop]
 
 			temporaryState := p.stateStack[len(p.stateStack)-1]
 
-			leftToken := ruleLeftTokens[rule-1]
+			leftToken := nonterminals.RuleLeftTokens[rule-1]
 			stateString := p.actionTable[temporaryState][leftToken]
 
 			state, err := strconv.Atoi(stateString)
@@ -111,6 +114,7 @@ func (p *Parser) Run(lexer *lexical.Lexer) error {
 
 			action = p.actionTable[state][currentToken]
 
+			sem.Parse(rule)
 			continue
 		}
 

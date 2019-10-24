@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/lucbarr/sslang/lexical"
+	"github.com/lucbarr/sslang/nonterminals"
 	"github.com/lucbarr/sslang/scope"
-	"github.com/lucbarr/sslang/syntatical"
 )
 
 type Analyser struct {
@@ -19,12 +19,17 @@ type Analyser struct {
 	label  int
 }
 
-func NewAnalyser() *Analyser {
-	f, _ := os.Open("out")
+func (a *Analyser) Close() error {
+	return a.f.Close()
+}
+
+func NewAnalyser(l *lexical.Lexer) *Analyser {
+	f, _ := os.Create("out")
 	return &Analyser{
 		scope: &scope.Analyser{},
 		Stack: []Attribute{},
 		f:     f,
+		lexer: l,
 	}
 }
 
@@ -47,7 +52,7 @@ func (a *Analyser) Parse(r int) {
 		t.Type = scope.PIntObj
 
 		TStatic.Size = 1
-		TStatic.Type = syntatical.T
+		TStatic.Type = nonterminals.T
 		TStatic.Attribute = t
 
 		a.Push(TStatic)
@@ -57,7 +62,7 @@ func (a *Analyser) Parse(r int) {
 		t.Type = scope.PCharObj
 
 		TStatic.Size = 1
-		TStatic.Type = syntatical.T
+		TStatic.Type = nonterminals.T
 		TStatic.Attribute = t
 
 		a.Push(TStatic)
@@ -67,7 +72,7 @@ func (a *Analyser) Parse(r int) {
 		t.Type = scope.PBoolObj
 
 		TStatic.Size = 1
-		TStatic.Type = syntatical.T
+		TStatic.Type = nonterminals.T
 		TStatic.Attribute = t
 
 		a.Push(TStatic)
@@ -77,7 +82,7 @@ func (a *Analyser) Parse(r int) {
 		t.Type = scope.PStringObj
 
 		TStatic.Size = 1
-		TStatic.Type = syntatical.T
+		TStatic.Type = nonterminals.T
 		TStatic.Attribute = t
 
 		a.Push(TStatic)
@@ -110,7 +115,7 @@ func (a *Analyser) Parse(r int) {
 			TStatic.Attribute = t
 			TStatic.Size = 0
 		}
-		TStatic.Type = syntatical.T
+		TStatic.Type = nonterminals.T
 		a.Push(TStatic)
 		break
 	case DT0: // DT -> 'type' IDD '=' 'array' '[' NUM ']' 'of' T
@@ -206,8 +211,9 @@ func (a *Analyser) Parse(r int) {
 		dc1 := DC1Static.Attribute.(DC)
 		dc0.List = dc1.List
 		DC0Static.Size = n
-		DC0Static.Type = syntatical.DC
+		DC0Static.Type = nonterminals.DC
 
+		a.Push(DC0Static)
 		break
 	case DC1: // DC -> LI ':' T
 		TStatic = a.Top()
@@ -274,7 +280,7 @@ func (a *Analyser) Parse(r int) {
 		lp0.List = lp1.List
 		LP0Static.Attribute = lp0
 		LP0Static.Size = n + TStatic.Size
-		LP0Static.Type = syntatical.LP
+		LP0Static.Type = nonterminals.LP
 		a.Push(LP0Static)
 		break
 	case LP1: // LP -> IDD ':' T
@@ -300,7 +306,7 @@ func (a *Analyser) Parse(r int) {
 		lp.List = p
 		LPStatic.Attribute = lp
 		LPStatic.Size = TStatic.Size
-		LPStatic.Type = syntatical.LP
+		LPStatic.Type = nonterminals.LP
 
 		a.Push(LPStatic)
 		break
@@ -337,7 +343,10 @@ func (a *Analyser) Parse(r int) {
 			}
 
 			p.Kind = scope.KindVar
-			v := p.T.(scope.Var)
+			v, ok := p.T.(scope.Var)
+			if !ok {
+				v = scope.Var{}
+			}
 			v.PType = t
 			v.Size = TStatic.Size
 			v.Index = n
@@ -360,22 +369,19 @@ func (a *Analyser) Parse(r int) {
 		li0 := LI0Static.Attribute.(LI)
 		li1 := LI0Static.Attribute.(LI)
 		li0.List = li1.List
-		LI0Static.Type = syntatical.LI
+		LI0Static.Type = nonterminals.LI
 		LI0Static.Attribute = li0
 		a.Push(LI0Static)
 		break
 	case LI1: // LI -> IDD
 		IDDStatic = a.Top()
 		a.Pop()
-		LI1Static = a.Top()
-		a.Pop()
-		li := LI0Static.Attribute.(LI)
-		li1 := LI1Static.Attribute.(LI)
-		li.List = li1.List
-		LI0Static.Attribute = li
-		LI0Static.Type = syntatical.LI
 
-		a.Push(LI0Static)
+		li := LIStatic.Attribute.(LI)
+		li.List = IDDStatic.Attribute.(ID).Object
+		LIStatic.Attribute = li
+		LIStatic.Type = nonterminals.LI
+		a.Push(LIStatic)
 		break
 	case S0: // S -> M
 		break
@@ -394,6 +400,20 @@ func (a *Analyser) Parse(r int) {
 		a.f.WriteString(fmt.Sprintf("L%d\n", mt.Label))
 		break
 	case U1: // U -> 'if' '(' E ')' MT M 'else' ME U
+		MEStatic = a.Top()
+		a.Pop()
+		MTStatic = a.Top()
+		a.Pop()
+		EStatic = a.Top()
+		a.Pop()
+
+		me := MEStatic.Attribute.(ME)
+		e := MEStatic.Attribute.(E)
+
+		l = me.Label
+		t = e.Type
+
+		a.f.WriteString(fmt.Sprintf("L%d", l))
 	case M0: // M -> 'if' '(' E ')' MT M 'else' ME M
 		MEStatic = a.Top()
 		a.Pop()
@@ -500,7 +520,7 @@ func (a *Analyser) Parse(r int) {
 		e.Type = l.Type
 
 		EStatic.Attribute = e
-		EStatic.Type = syntatical.E
+		EStatic.Type = nonterminals.E
 
 		a.Push(EStatic)
 		break
@@ -513,7 +533,7 @@ func (a *Analyser) Parse(r int) {
 		l := L0Static.Attribute.(L)
 		l.Type = scope.PBoolObj
 		L0Static.Attribute = l
-		L0Static.Type = syntatical.L
+		L0Static.Type = nonterminals.L
 
 		a.Push(L0Static)
 		a.f.WriteString(fmt.Sprintf("\tLT\n"))
@@ -527,7 +547,7 @@ func (a *Analyser) Parse(r int) {
 		l := L0Static.Attribute.(L)
 		l.Type = scope.PBoolObj
 		L0Static.Attribute = l
-		L0Static.Type = syntatical.L
+		L0Static.Type = nonterminals.L
 
 		a.Push(L0Static)
 		a.f.WriteString(fmt.Sprintf("\tGT\n"))
@@ -541,7 +561,7 @@ func (a *Analyser) Parse(r int) {
 		l := L0Static.Attribute.(L)
 		l.Type = scope.PBoolObj
 		L0Static.Attribute = l
-		L0Static.Type = syntatical.L
+		L0Static.Type = nonterminals.L
 
 		a.Push(L0Static)
 		a.f.WriteString(fmt.Sprintf("\tLE\n"))
@@ -555,7 +575,7 @@ func (a *Analyser) Parse(r int) {
 		l := L0Static.Attribute.(L)
 		l.Type = scope.PBoolObj
 		L0Static.Attribute = l
-		L0Static.Type = syntatical.L
+		L0Static.Type = nonterminals.L
 
 		a.Push(L0Static)
 		a.f.WriteString(fmt.Sprintf("\tGE\n"))
@@ -569,7 +589,7 @@ func (a *Analyser) Parse(r int) {
 		l := L0Static.Attribute.(L)
 		l.Type = scope.PBoolObj
 		L0Static.Attribute = l
-		L0Static.Type = syntatical.L
+		L0Static.Type = nonterminals.L
 
 		a.Push(L0Static)
 		a.f.WriteString(fmt.Sprintf("\tEQ\n"))
@@ -583,7 +603,7 @@ func (a *Analyser) Parse(r int) {
 		l := L0Static.Attribute.(L)
 		l.Type = scope.PBoolObj
 		L0Static.Attribute = l
-		L0Static.Type = syntatical.L
+		L0Static.Type = nonterminals.L
 
 		a.Push(L0Static)
 		a.f.WriteString(fmt.Sprintf("\tNE\n"))
@@ -597,7 +617,7 @@ func (a *Analyser) Parse(r int) {
 
 		ls.Type = rs.Type
 		LStatic.Attribute = ls
-		LStatic.Type = syntatical.L
+		LStatic.Type = nonterminals.L
 
 		a.Push(LStatic)
 		break
@@ -612,7 +632,7 @@ func (a *Analyser) Parse(r int) {
 		r0.Type = r1.Type
 
 		R0Static.Attribute = r0
-		R0Static.Type = syntatical.R
+		R0Static.Type = nonterminals.R
 
 		a.Push(R0Static)
 		a.f.WriteString(fmt.Sprintf("\tADD\n"))
@@ -628,7 +648,7 @@ func (a *Analyser) Parse(r int) {
 		r0.Type = r1.Type
 
 		R0Static.Attribute = r0
-		R0Static.Type = syntatical.R
+		R0Static.Type = nonterminals.R
 
 		a.Push(R0Static)
 		a.f.WriteString(fmt.Sprintf("\tSUB\n"))
@@ -641,7 +661,7 @@ func (a *Analyser) Parse(r int) {
 		r.Type = y.Type
 
 		RStatic.Attribute = r
-		RStatic.Type = syntatical.R
+		RStatic.Type = nonterminals.R
 
 		a.Push(RStatic)
 		break
@@ -656,7 +676,7 @@ func (a *Analyser) Parse(r int) {
 		y0.Type = y1.Type
 
 		Y0Static.Attribute = y0
-		Y0Static.Type = syntatical.Y
+		Y0Static.Type = nonterminals.Y
 		a.Push(Y0Static)
 
 		a.f.WriteString(fmt.Sprintf("\tMUL\n"))
@@ -672,7 +692,7 @@ func (a *Analyser) Parse(r int) {
 		y0.Type = y1.Type
 
 		Y0Static.Attribute = y0
-		Y0Static.Type = syntatical.Y
+		Y0Static.Type = nonterminals.Y
 		a.Push(Y0Static)
 
 		a.f.WriteString(fmt.Sprintf("\tDIV\n"))
@@ -685,7 +705,7 @@ func (a *Analyser) Parse(r int) {
 		f := FStatic.Attribute.(F)
 		y.Type = f.Type
 		Y0Static.Attribute = y
-		Y0Static.Type = syntatical.Y
+		Y0Static.Type = nonterminals.Y
 
 		a.Push(Y0Static)
 		break
@@ -701,7 +721,7 @@ func (a *Analyser) Parse(r int) {
 		f := FStatic.Attribute.(F)
 		f.Type = lv.Type
 		FStatic.Attribute = f
-		FStatic.Type = syntatical.F
+		FStatic.Type = nonterminals.F
 
 		a.Push(FStatic)
 		a.f.WriteString(fmt.Sprintf("\tDE_REF%d\n", n))
@@ -716,7 +736,7 @@ func (a *Analyser) Parse(r int) {
 		fs := FStatic.Attribute.(F)
 		fs.Type = scope.PIntObj
 		FStatic.Attribute = fs
-		FStatic.Type = syntatical.F
+		FStatic.Type = nonterminals.F
 
 		a.Push(FStatic)
 		a.f.WriteString(fmt.Sprintf("\tDUP\n\tDUP\n\tDE_REF 1\n"))
@@ -732,7 +752,7 @@ func (a *Analyser) Parse(r int) {
 		fs := FStatic.Attribute.(F)
 		fs.Type = lv.Type
 		FStatic.Attribute = fs
-		FStatic.Type = syntatical.F
+		FStatic.Type = nonterminals.F
 
 		a.Push(FStatic)
 		a.f.WriteString(fmt.Sprintf("\tDUP\n\tDUP\n\tDE_REF 1\n"))
@@ -748,7 +768,7 @@ func (a *Analyser) Parse(r int) {
 		fs := FStatic.Attribute.(F)
 		fs.Type = lv.Type
 		FStatic.Attribute = fs
-		FStatic.Type = syntatical.F
+		FStatic.Type = nonterminals.F
 
 		a.Push(FStatic)
 		a.f.WriteString(fmt.Sprintf("\tDUP\n\tDUP\n\tDE_REF 1\n"))
@@ -765,7 +785,7 @@ func (a *Analyser) Parse(r int) {
 		fs := FStatic.Attribute.(F)
 		fs.Type = t
 		FStatic.Attribute = fs
-		FStatic.Type = syntatical.F
+		FStatic.Type = nonterminals.F
 
 		a.Push(FStatic)
 		a.f.WriteString(fmt.Sprintf("\tDUP\n\tDUP\n\tDE_REF 1\n"))
@@ -798,7 +818,7 @@ func (a *Analyser) Parse(r int) {
 		ms := MCStatic.Attribute.(MC)
 		fs.Type = ms.Type
 		FStatic.Attribute = fs
-		FStatic.Type = syntatical.F
+		FStatic.Type = nonterminals.F
 
 		a.Push(FStatic)
 
@@ -815,7 +835,7 @@ func (a *Analyser) Parse(r int) {
 		f0 := F0Static.Attribute.(F)
 		f0.Type = t
 		F0Static.Attribute = f0
-		F0Static.Type = syntatical.F
+		F0Static.Type = nonterminals.F
 
 		a.Push(F0Static)
 		a.f.WriteString(fmt.Sprintf("\tNEG\n"))
@@ -830,7 +850,7 @@ func (a *Analyser) Parse(r int) {
 		f0 := F0Static.Attribute.(F)
 		f0.Type = t
 		F0Static.Attribute = f0
-		F0Static.Type = syntatical.F
+		F0Static.Type = nonterminals.F
 
 		a.Push(F0Static)
 		a.f.WriteString(fmt.Sprintf("\tNOT\n"))
@@ -842,7 +862,7 @@ func (a *Analyser) Parse(r int) {
 		fs := FStatic.Attribute.(F)
 		fs.Type = scope.PBoolObj
 		FStatic.Attribute = fs
-		FStatic.Type = syntatical.F
+		FStatic.Type = nonterminals.F
 
 		a.Push(FStatic)
 
@@ -856,7 +876,7 @@ func (a *Analyser) Parse(r int) {
 		fs.Type = scope.PBoolObj
 
 		FStatic.Attribute = fs
-		FStatic.Type = syntatical.F
+		FStatic.Type = nonterminals.F
 
 		a.Push(FStatic)
 
@@ -870,7 +890,7 @@ func (a *Analyser) Parse(r int) {
 		fs.Type = scope.PCharObj
 
 		FStatic.Attribute = fs
-		FStatic.Type = syntatical.F
+		FStatic.Type = nonterminals.F
 
 		a.Push(FStatic)
 
@@ -885,7 +905,7 @@ func (a *Analyser) Parse(r int) {
 		fs.Type = scope.PStringObj
 
 		FStatic.Attribute = fs
-		FStatic.Type = syntatical.F
+		FStatic.Type = nonterminals.F
 
 		a.Push(FStatic)
 
@@ -900,7 +920,7 @@ func (a *Analyser) Parse(r int) {
 		fs.Type = scope.PIntObj
 
 		FStatic.Attribute = fs
-		FStatic.Type = syntatical.F
+		FStatic.Type = nonterminals.F
 
 		a.Push(FStatic)
 
@@ -934,7 +954,7 @@ func (a *Analyser) Parse(r int) {
 			}
 		}
 
-		LE0Static.Type = syntatical.LE
+		LE0Static.Type = nonterminals.LE
 		a.Push(LE0Static)
 		break
 	case LE1: // LE -> E
@@ -963,7 +983,7 @@ func (a *Analyser) Parse(r int) {
 			}
 		}
 
-		LEStatic.Type = syntatical.LE
+		LEStatic.Type = nonterminals.LE
 		a.Push(LEStatic)
 	case LV0: // LV -> LV '.' IDU
 		IDStatic = a.Top()
@@ -1011,7 +1031,7 @@ func (a *Analyser) Parse(r int) {
 			}
 		}
 
-		LV0Static.Type = syntatical.LV
+		LV0Static.Type = nonterminals.LV
 		a.Push(LV0Static)
 		break
 	case LV1: // LV -> LV '[' E ']'
@@ -1040,7 +1060,7 @@ func (a *Analyser) Parse(r int) {
 
 		// if a.scope.CheckTypes(EStatic.Attribute.(E).Type, scope.PIntObj)
 
-		LV0Static.Type = syntatical.LV
+		LV0Static.Type = nonterminals.LV
 		LV0Static.Attribute = lv0
 		break
 	case LV2: // LV -> IDU
@@ -1049,22 +1069,29 @@ func (a *Analyser) Parse(r int) {
 
 		p = IDUStatic.Attribute.(ID).Object
 		lv := LVStatic.Attribute.(LV)
+		vart, ok := p.T.(scope.Var)
+		if !ok {
+			vart = scope.Var{}
+		}
 		if p.Kind != scope.KindVar && p.Kind != scope.KindParam {
 			if p.Kind != scope.KindUniversal {
 				// err ?
 			}
 			lv.Type = scope.PUniversalObj
 		} else {
-			lv.Type = p.T.(scope.Var).PType
+			lv.Type = vart.PType
 
-			typ := lv.Type.T.(scope.Type)
-			typ.Size = p.T.(scope.Var).Size
+			typ, ok := lv.Type.T.(scope.Type)
+			if !ok {
+				typ = scope.Type{}
+			}
+			typ.Size = vart.Size
 
 			lv.Type.T = typ
 		}
 		LVStatic.Attribute = lv
 
-		LVStatic.Type = syntatical.LV
+		LVStatic.Type = nonterminals.LV
 
 		t = lv.Type
 
@@ -1075,7 +1102,7 @@ func (a *Analyser) Parse(r int) {
 		ids := IDDStatic.Attribute.(ID)
 		ids.Name = name
 
-		if a.scope.SearchLocalSymbol(name) != nil {
+		if p = a.scope.SearchLocalSymbol(name); p != nil {
 			// err ?
 		} else {
 			p = a.scope.DefineSymbol(name)
@@ -1091,13 +1118,16 @@ func (a *Analyser) Parse(r int) {
 		idu := IDUStatic.Attribute.(ID)
 		idu.Name = name
 
-		if a.scope.SearchGlobalSymbol(name) != nil {
+		fmt.Println(name)
+
+		if p = a.scope.SearchGlobalSymbol(name); p == nil {
 			// err ?
 			p = a.scope.DefineSymbol(name)
+			panic(fmt.Errorf("undeclared variable"))
 		}
 
 		idu.Object = p
-		IDDStatic.Attribute = idu
+		IDUStatic.Attribute = idu
 
 		a.Push(IDUStatic)
 		break
@@ -1114,7 +1144,7 @@ func (a *Analyser) Parse(r int) {
 		tru.Type = scope.PBoolObj
 		tru.Val = 1
 
-		TRUStatic.Type = syntatical.TRUE
+		TRUStatic.Type = nonterminals.TRUE
 		TRUStatic.Attribute = tru
 
 		a.Push(TRUStatic)
@@ -1124,7 +1154,7 @@ func (a *Analyser) Parse(r int) {
 		fals.Type = scope.PBoolObj
 		fals.Val = 0
 
-		FALSStatic.Type = syntatical.FALSE
+		FALSStatic.Type = nonterminals.FALSE
 		FALSStatic.Attribute = fals
 
 		a.Push(FALSStatic)
@@ -1135,7 +1165,7 @@ func (a *Analyser) Parse(r int) {
 		chr.Pos = a.lexer.SecondaryToken
 		chr.Val = a.lexer.GetRuneConstant(a.lexer.SecondaryToken)
 
-		CHRStatic.Type = syntatical.CHR
+		CHRStatic.Type = nonterminals.CHR
 		CHRStatic.Attribute = chr
 
 		a.Push(CHRStatic)
@@ -1146,7 +1176,7 @@ func (a *Analyser) Parse(r int) {
 		str.Pos = a.lexer.SecondaryToken
 		str.Val = a.lexer.GetStringConstant(a.lexer.SecondaryToken)
 
-		STRStatic.Type = syntatical.STR
+		STRStatic.Type = nonterminals.STR
 		STRStatic.Attribute = str
 
 		a.Push(STRStatic)
@@ -1157,7 +1187,7 @@ func (a *Analyser) Parse(r int) {
 		num.Pos = a.lexer.SecondaryToken
 		num.Val = a.lexer.GetNumeralConstant(a.lexer.SecondaryToken)
 
-		NUMStatic.Type = syntatical.NUM
+		NUMStatic.Type = nonterminals.NUM
 		NUMStatic.Attribute = num
 
 		a.Push(NUMStatic)
@@ -1207,7 +1237,7 @@ func (a *Analyser) Parse(r int) {
 		}
 
 		MCStatic.Attribute = mc
-		MCStatic.Type = syntatical.MC
+		MCStatic.Type = nonterminals.MC
 
 		a.Push(MCStatic)
 		break
@@ -1217,7 +1247,10 @@ func (a *Analyser) Parse(r int) {
 		f = IDDStatic.Attribute.(ID).Object
 
 		f.Kind = scope.KindFunction
-		funct := f.T.(scope.Function)
+		funct, ok := f.T.(scope.Function)
+		if !ok {
+			f.T = scope.Function{}
+		}
 		funct.Params = 0
 		funct.Vars = 0
 		funct.Index = a.nFuncs
@@ -1232,7 +1265,7 @@ func (a *Analyser) Parse(r int) {
 		mt.Label = l
 
 		MTStatic.Attribute = mt
-		MTStatic.Type = syntatical.MT
+		MTStatic.Type = nonterminals.MT
 
 		a.f.WriteString(fmt.Sprintf("\tJMP_FW %d\n", l))
 
@@ -1247,7 +1280,7 @@ func (a *Analyser) Parse(r int) {
 
 		me := MEStatic.Attribute.(ME)
 		me.Label = l2
-		MEStatic.Type = syntatical.ME
+		MEStatic.Type = nonterminals.ME
 
 		a.f.WriteString(fmt.Sprintf("\tJMP_FW %d\n L%d\n", l2, l1))
 		a.Push(MEStatic)

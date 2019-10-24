@@ -401,7 +401,7 @@ func (a *Lexer) addRuneConstant(n rune) int {
 		Type:  Character,
 		Value: n,
 	})
-	return len(a.constants)
+	return len(a.constants) - 1
 }
 
 // addStringConstant returns the string constant given its id
@@ -410,7 +410,7 @@ func (a *Lexer) addStringConstant(n string) int {
 		Type:  String,
 		Value: n,
 	})
-	return len(a.constants)
+	return len(a.constants) - 1
 }
 
 // addNumeralConstant returns the int constant given its id
@@ -419,7 +419,7 @@ func (a *Lexer) addNumeralConstant(n int) int {
 		Type:  Numeral,
 		Value: n,
 	})
-	return len(a.constants)
+	return len(a.constants) - 1
 }
 
 // Identifiers retrieves the identifiers

@@ -170,10 +170,7 @@ func (a *Analyser) DefineSymbol(name int) *Object {
 func (a *Analyser) SearchLocalSymbol(name int) *Object {
 	obj := a.symbolTable[a.level]
 
-	for {
-		if obj == nil {
-			break
-		}
+	for obj != nil {
 
 		if obj.Name == name {
 			return obj
@@ -189,14 +186,10 @@ func (a *Analyser) SearchLocalSymbol(name int) *Object {
 func (a *Analyser) SearchGlobalSymbol(name int) *Object {
 	var obj *Object
 
-	for i := a.level - 1; i >= 0; i-- {
+	for i := a.level; i >= 0; i-- {
 		obj = a.symbolTable[i]
 
-		for {
-			if obj == nil {
-				break
-			}
-
+		for obj != nil {
 			if obj.Name == name {
 				return obj
 			}
