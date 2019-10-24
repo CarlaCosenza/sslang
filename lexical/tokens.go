@@ -2,8 +2,6 @@ package lexical
 
 // Tokens
 const (
-	// this is not my language bruh
-	UNKNOWN = -1
 	// reserved words tokens
 	Integer = iota
 	Char
