@@ -36,6 +36,7 @@ func NewAnalyser(l *lexical.Lexer) *Analyser {
 func (a *Analyser) Parse(r int) {
 	rule := Rule(r)
 
+	fmt.Println(rule, len(a.Stack))
 	switch rule {
 	case P0:
 		break
@@ -102,10 +103,10 @@ func (a *Analyser) Parse(r int) {
 				alias := p.T.(scope.Alias)
 				TStatic.Size = alias.Size
 			} else if p.Kind == scope.KindArrayType {
-				arr := p.T.(scope.Alias)
+				arr := p.T.(scope.Array)
 				TStatic.Size = arr.Size
 			} else if p.Kind == scope.KindStructType {
-				strct := p.T.(scope.Alias)
+				strct := p.T.(scope.Struct)
 				TStatic.Size = strct.Size
 			}
 		} else {
@@ -127,8 +128,8 @@ func (a *Analyser) Parse(r int) {
 		a.Pop()
 
 		id := IDDStatic.Attribute.(ID)
-		num := IDDStatic.Attribute.(NUM)
-		typ := IDDStatic.Attribute.(T)
+		num := NUMStatic.Attribute.(NUM)
+		typ := TStatic.Attribute.(T)
 
 		p = id.Object
 		n = num.Val
@@ -197,7 +198,10 @@ func (a *Analyser) Parse(r int) {
 
 			p.Kind = scope.KindField
 
-			field := p.T.(scope.Field)
+			field, ok := p.T.(scope.Field)
+			if !ok {
+				field = scope.Field{}
+			}
 			field.PType = t
 			field.Index = n
 			field.Size = TStatic.Size
@@ -233,7 +237,10 @@ func (a *Analyser) Parse(r int) {
 			}
 
 			p.Kind = scope.KindField
-			field := p.T.(scope.Field)
+			field, ok := p.T.(scope.Field)
+			if !ok {
+				field = scope.Field{}
+			}
 			field.PType = t
 			field.Size = TStatic.Size
 			field.Index = n
@@ -1117,8 +1124,6 @@ func (a *Analyser) Parse(r int) {
 		name = a.lexer.SecondaryToken
 		idu := IDUStatic.Attribute.(ID)
 		idu.Name = name
-
-		fmt.Println(name)
 
 		if p = a.scope.SearchGlobalSymbol(name); p == nil {
 			// err ?
