@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/lucbarr/sslang/lexical"
-	"github.com/lucbarr/sslang/semantics"
 )
 
 // Parser parses the program
@@ -65,7 +64,7 @@ func (p *Parser) Run(lexer *lexical.Lexer) error {
 	currentToken, err := lexer.NextToken()
 	action := p.actionTable[state][currentToken]
 
-	sem := semantics.NewAnalyser()
+	//sem := semantics.NewAnalyser()
 
 	for {
 		if err != nil && err != io.EOF {
@@ -111,6 +110,7 @@ func (p *Parser) Run(lexer *lexical.Lexer) error {
 			p.stateStack = append(p.stateStack, state)
 
 			action = p.actionTable[state][currentToken]
+
 			continue
 		}
 
