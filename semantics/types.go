@@ -9,60 +9,115 @@ type Attribute struct {
 	Attribute Obj
 }
 
+func (a Attribute) String() string {
+	switch a.Attribute.(type) {
+	case ID:
+		return "ID"
+	case T:
+		return "T"
+	case E:
+		return "E"
+	case L:
+		return "L"
+	case R:
+		return "R"
+	case Y:
+		return "Y"
+	case F:
+		return "F"
+	case LV:
+		return "LV"
+	case MC:
+		return "MC"
+	case MT:
+		return "MT"
+	case ME:
+		return "ME"
+	case MW:
+		return "MW"
+	case MA:
+		return "MA"
+	case LE:
+		return "LE"
+	case LI:
+		return "LI"
+	case DC:
+		return "DC"
+	case LP:
+		return "LP"
+	case TRUE:
+		return "TRUE"
+	case FALSE:
+		return "FALSE"
+	case CHR:
+		return "CHR"
+	case STR:
+		return "STR"
+	case NUM:
+		return "NUM"
+	}
+	return ""
+}
+
 type Obj interface {
 	attributeObj()
 }
 
-func (a ID) attributeObj() {}
+func (a ID) attributeObj()    {}
+func (a T) attributeObj()     {}
+func (a E) attributeObj()     {}
+func (a L) attributeObj()     {}
+func (a R) attributeObj()     {}
+func (a Y) attributeObj()     {}
+func (a F) attributeObj()     {}
+func (a LV) attributeObj()    {}
+func (a MC) attributeObj()    {}
+func (a MT) attributeObj()    {}
+func (a ME) attributeObj()    {}
+func (a MW) attributeObj()    {}
+func (a MA) attributeObj()    {}
+func (a LE) attributeObj()    {}
+func (a LI) attributeObj()    {}
+func (a DC) attributeObj()    {}
+func (a LP) attributeObj()    {}
+func (a TRUE) attributeObj()  {}
+func (a FALSE) attributeObj() {}
+func (a CHR) attributeObj()   {}
+func (a STR) attributeObj()   {}
+func (a NUM) attributeObj()   {}
 
 type ID struct {
 	Object *scope.Object
 	Name   int
 }
 
-func (a T) attributeObj() {}
-
 type T struct {
 	Type *scope.Object
 }
-
-func (a E) attributeObj() {}
 
 type E struct {
 	Type *scope.Object
 }
 
-func (a L) attributeObj() {}
-
 type L struct {
 	Type *scope.Object
 }
-
-func (a R) attributeObj() {}
 
 type R struct {
 	Type *scope.Object
 }
 
-func (a Y) attributeObj() {}
-
 type Y struct {
 	Type *scope.Object
 }
-
-func (a F) attributeObj() {}
 
 type F struct {
 	Type *scope.Object
 }
 
-func (a LV) attributeObj() {}
-
 type LV struct {
 	Type *scope.Object
 }
-
-func (a MC) attributeObj() {}
 
 type MC struct {
 	Type  *scope.Object
@@ -70,31 +125,21 @@ type MC struct {
 	Err   int
 }
 
-func (a MT) attributeObj() {}
-
 type MT struct {
 	Label int
 }
-
-func (a ME) attributeObj() {}
 
 type ME struct {
 	Label int
 }
 
-func (a MW) attributeObj() {}
-
 type MW struct {
 	Label int
 }
 
-func (a MA) attributeObj() {}
-
 type MA struct {
 	Label int
 }
-
-func (a LE) attributeObj() {}
 
 type LE struct {
 	Type  *scope.Object
@@ -103,39 +148,27 @@ type LE struct {
 	N     int
 }
 
-func (a LI) attributeObj() {}
-
 type LI struct {
 	List *scope.Object
 }
-
-func (a DC) attributeObj() {}
 
 type DC struct {
 	List *scope.Object
 }
 
-func (a LP) attributeObj() {}
-
 type LP struct {
 	List *scope.Object
 }
-
-func (a TRUE) attributeObj() {}
 
 type TRUE struct {
 	Type *scope.Object
 	Val  int
 }
 
-func (a FALSE) attributeObj() {}
-
 type FALSE struct {
 	Type *scope.Object
 	Val  int
 }
-
-func (a CHR) attributeObj() {}
 
 type CHR struct {
 	Type *scope.Object
@@ -143,15 +176,11 @@ type CHR struct {
 	Val  rune
 }
 
-func (a STR) attributeObj() {}
-
 type STR struct {
 	Type *scope.Object
 	Pos  int
 	Val  string
 }
-
-func (a NUM) attributeObj() {}
 
 type NUM struct {
 	Type *scope.Object

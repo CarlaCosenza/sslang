@@ -3,6 +3,7 @@ package semantics
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/lucbarr/sslang/lexical"
 	"github.com/lucbarr/sslang/nonterminals"
@@ -33,10 +34,20 @@ func NewAnalyser(l *lexical.Lexer) *Analyser {
 	}
 }
 
+func (a *Analyser) StackString() string {
+	var sb strings.Builder
+	sb.WriteString("[ ")
+	for _, s := range a.Stack {
+		sb.WriteString(fmt.Sprintf("%v ", s))
+	}
+	sb.WriteString("]")
+	return sb.String()
+}
+
 func (a *Analyser) Parse(r int) {
 	rule := Rule(r)
 
-	fmt.Println(rule, len(a.Stack))
+	fmt.Println(rule, a.StackString())
 	switch rule {
 	case P0:
 		break
@@ -183,6 +194,7 @@ func (a *Analyser) Parse(r int) {
 		LIStatic = a.Top()
 		a.Pop()
 		DC1Static = a.Top()
+		a.Pop()
 
 		li := LIStatic.Attribute.(LI)
 		typ := TStatic.Attribute.(T)
@@ -1078,7 +1090,9 @@ func (a *Analyser) Parse(r int) {
 		lv := LVStatic.Attribute.(LV)
 		vart, ok := p.T.(scope.Var)
 		if !ok {
-			vart = scope.Var{}
+			vart = scope.Var{
+				PType: &scope.Object{},
+			}
 		}
 		if p.Kind != scope.KindVar && p.Kind != scope.KindParam {
 			if p.Kind != scope.KindUniversal {
