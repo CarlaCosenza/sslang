@@ -47,7 +47,6 @@ func (a *Analyser) StackString() string {
 func (a *Analyser) Parse(r int) {
 	rule := Rule(r)
 
-	fmt.Println(rule, a.StackString())
 	switch rule {
 	case P0:
 		break
@@ -203,10 +202,7 @@ func (a *Analyser) Parse(r int) {
 		t = typ.Type
 		n = DC1Static.Size
 
-		for {
-			if p == nil || p.Kind != scope.KindUndefined {
-				break
-			}
+		for p != nil && p.Kind == scope.KindUndefined {
 
 			p.Kind = scope.KindField
 
@@ -315,11 +311,14 @@ func (a *Analyser) Parse(r int) {
 		t = typ.Type
 
 		p.Kind = scope.KindParam
-		p.T = scope.Param{
-			PType: t,
-			Index: 0,
-			Size:  TStatic.Size,
+		param, ok := p.T.(scope.Param)
+		if !ok {
+			param = scope.Param{}
 		}
+		param.PType = t
+		param.Index = 0
+		param.Size = TStatic.Size
+		p.T = param
 
 		lp := LPStatic.Attribute.(LP)
 		lp.List = p
@@ -358,10 +357,7 @@ func (a *Analyser) Parse(r int) {
 		funct := curFunction.T.(scope.Function)
 		n = funct.Vars
 
-		for {
-			if p == nil || p.Kind != scope.KindUndefined {
-				break
-			}
+		for p != nil && p.Kind == scope.KindUndefined {
 
 			p.Kind = scope.KindVar
 			v, ok := p.T.(scope.Var)
@@ -1108,12 +1104,11 @@ func (a *Analyser) Parse(r int) {
 				typ = scope.Type{}
 			}
 			typ.Size = vart.Size
-			a.f.WriteString(fmt.Sprintf("\tLOAD_REF %d\n", vart.Size))
 
 			lv.Type.T = typ
+			a.f.WriteString(fmt.Sprintf("\tLOAD_REF %d\n", vart.Index))
 		}
 		LVStatic.Attribute = lv
-
 		LVStatic.Type = nonterminals.LV
 
 		t = lv.Type
@@ -1276,6 +1271,8 @@ func (a *Analyser) Parse(r int) {
 		funct.Vars = 0
 		funct.Index = a.nFuncs
 		a.nFuncs++
+		f.T = funct
+
 		a.scope.NewBlock()
 		break
 	case MT0: // MT -> ''

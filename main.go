@@ -13,7 +13,7 @@ func main() {
 	args := os.Args[1:]
 	if len(args) == 0 {
 		fmt.Println(`No SSL file provided.
-	age : ./ssl example.ssl`)
+usage : ./sslang example.ssl`)
 		return
 	}
 
@@ -35,7 +35,7 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	} else {
-		fmt.Printf("%v parsed successfully!!!\n", file)
+		fmt.Printf("%v compiled successfully!!\n", file)
 	}
 
 }
