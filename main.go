@@ -1,19 +1,28 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
-	"os"
 
 	"github.com/lucbarr/sslang/lexical"
 	"github.com/lucbarr/sslang/syntatical"
 )
 
+var (
+	outFile string
+)
+
+func init() {
+	flag.StringVar(&outFile, "out", "out", "-out <output file name>")
+	flag.Parse()
+}
+
 func main() {
-	args := os.Args[1:]
+	args := flag.Args()
 	if len(args) == 0 {
 		fmt.Println(`No SSL file provided.
-usage : ./sslang example.ssl`)
+usage : ./sslang -out=outputFile.vm example.ssl `)
 		return
 	}
 
@@ -22,6 +31,7 @@ usage : ./sslang example.ssl`)
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
 		fmt.Printf("Could not read file %v\n", file)
+		return
 	}
 
 	lexer := lexical.NewLexer(bytes)
@@ -31,7 +41,7 @@ usage : ./sslang example.ssl`)
 		fmt.Println(err)
 	}
 
-	err = parser.Run(lexer)
+	err = parser.Run(lexer, outFile)
 	if err != nil {
 		fmt.Println(err)
 	} else {

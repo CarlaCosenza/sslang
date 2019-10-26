@@ -17,8 +17,6 @@ type Parser struct {
 	actionTable [][]string
 
 	stateStack []int
-
-	out []int
 }
 
 // NewParser returns a parser from action table
@@ -31,7 +29,6 @@ func NewParser(actionTableFile string) (*Parser, error) {
 	return &Parser{
 		actionTable: actionTable,
 		stateStack:  []int{0},
-		out:         []int{},
 	}, nil
 }
 
@@ -61,12 +58,12 @@ func buildActionTableFromFile(file string) ([][]string, error) {
 }
 
 // Run runs the lexical analysis
-func (p *Parser) Run(lexer *lexical.Lexer) error {
+func (p *Parser) Run(lexer *lexical.Lexer, out string) error {
 	state := 0
 	currentToken, _ := lexer.NextToken()
 	action := p.actionTable[state][currentToken]
 
-	sem := semantics.NewAnalyser(lexer)
+	sem := semantics.NewAnalyser(lexer, out)
 	defer sem.Close()
 
 	for !accept(action) {

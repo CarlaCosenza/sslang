@@ -26,8 +26,8 @@ func (a *Analyser) Close() error {
 }
 
 // NewAnalyser creates a new analyser
-func NewAnalyser(l *lexical.Lexer) *Analyser {
-	f, _ := os.Create("out")
+func NewAnalyser(l *lexical.Lexer, fileName string) *Analyser {
+	f, _ := os.Create(fileName)
 	return &Analyser{
 		scope: &scope.Analyser{},
 		Stack: []Attribute{},

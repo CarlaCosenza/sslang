@@ -9,11 +9,16 @@ building
 
 requires:
 
-	- Go 1.x
+	- Go 1.11
 
-to build:
+clone the repository wherever, then:
 
-	make build
+	cd sslang
+	./sslang example.ssl
+
+output will be:
+
+	out
 
 
 testing
