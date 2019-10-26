@@ -1,10 +1,7 @@
 package syntatical
 
 import (
-	"encoding/csv"
 	"fmt"
-	"io"
-	"os"
 	"strconv"
 
 	"github.com/lucbarr/sslang/lexical"
@@ -20,41 +17,11 @@ type Parser struct {
 }
 
 // NewParser returns a parser from action table
-func NewParser(actionTableFile string) (*Parser, error) {
-	actionTable, err := buildActionTableFromFile(actionTableFile)
-	if err != nil {
-		return nil, err
-	}
-
+func NewParser() (*Parser, error) {
 	return &Parser{
 		actionTable: actionTable,
 		stateStack:  []int{0},
 	}, nil
-}
-
-func buildActionTableFromFile(file string) ([][]string, error) {
-	f, err := os.Open(file)
-	if err != nil {
-		return nil, err
-	}
-
-	reader := csv.NewReader(f)
-	reader.Comma = '\t'
-
-	actionTable := [][]string{}
-
-	reader.Read() // skip header
-	for {
-		line, err := reader.Read()
-
-		if err == io.EOF {
-			break
-		}
-
-		actionTable = append(actionTable, line[1:])
-	}
-
-	return actionTable, nil
 }
 
 // Run runs the lexical analysis

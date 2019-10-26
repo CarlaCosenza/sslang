@@ -36,7 +36,7 @@ usage : ./sslang -out=outputFile.vm example.ssl `)
 
 	lexer := lexical.NewLexer(bytes)
 
-	parser, err := syntatical.NewParser("syntatical/action_table.csv")
+	parser, err := syntatical.NewParser()
 	if err != nil {
 		fmt.Println(err)
 	}
