@@ -355,18 +355,19 @@ func (a *Analyser) Parse(r int) {
 		li := LIStatic.Attribute.(LI)
 		p = li.List
 		funct := curFunction.T.(scope.Function)
-		n = funct.Vars
+		n = funct.Params
 
 		for p != nil && p.Kind == scope.KindUndefined {
 
 			p.Kind = scope.KindVar
 			v, ok := p.T.(scope.Var)
 			if !ok {
-				v = scope.Var{}
+				v = scope.Var{
+					PType: t,
+					Size:  TStatic.Size,
+					Index: n,
+				}
 			}
-			v.PType = t
-			v.Size = TStatic.Size
-			v.Index = n
 			p.T = v
 
 			n = n + TStatic.Size
@@ -1104,6 +1105,9 @@ func (a *Analyser) Parse(r int) {
 				typ = scope.Type{}
 			}
 			typ.Size = vart.Size
+			if p.Kind == scope.KindParam {
+				typ.Size = p.T.(scope.Param).Size
+			}
 
 			lv.Type.T = typ
 			a.f.WriteString(fmt.Sprintf("\tLOAD_REF %d\n", vart.Index))
