@@ -85,10 +85,7 @@ type Alias struct {
 }
 
 // Type defines the alias object type
-type Type struct {
-	BaseType *Object
-	Size     int
-}
+type Type Alias
 
 // Array defines the array object type
 type Array struct {
@@ -120,11 +117,7 @@ type Var struct {
 }
 
 // Param defines the var object type
-type Param struct {
-	PType *Object
-	Index int
-	Size  int
-}
+type Param Var
 
 // Field defines the var object type
 type Field struct {

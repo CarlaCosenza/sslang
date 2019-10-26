@@ -50,20 +50,22 @@ func (a *Lexer) Run() ([]int, error) {
 		if err != nil && err != io.EOF {
 			return nil, err
 		}
+		tokens = append(tokens, token)
 
-		if err == io.EOF {
-			tokens = append(tokens, EOF)
+		if token == EOF {
 			break
 		}
-
-		tokens = append(tokens, token)
 	}
 	return tokens, nil
 }
 
 // NextToken returns the next token
 func (a *Lexer) NextToken() (int, error) {
-	return a.nextToken(a.program)
+	token, err := a.nextToken(a.program)
+	if err == io.EOF {
+		token = EOF
+	}
+	return token, nil
 }
 
 func (a *Lexer) nextToken(buf *bytes.Buffer) (int, error) {

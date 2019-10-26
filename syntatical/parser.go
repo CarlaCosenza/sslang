@@ -63,33 +63,18 @@ func buildActionTableFromFile(file string) ([][]string, error) {
 // Run runs the lexical analysis
 func (p *Parser) Run(lexer *lexical.Lexer) error {
 	state := 0
-	currentToken, err := lexer.NextToken()
+	currentToken, _ := lexer.NextToken()
 	action := p.actionTable[state][currentToken]
 
 	sem := semantics.NewAnalyser(lexer)
 	defer sem.Close()
 
-	for {
-		if err != nil && err != io.EOF {
-			return err
-		}
-
-		if err == io.EOF {
-			break
-		}
-
-		if accept(action) {
-			break
-		}
-
+	for !accept(action) {
 		state, ok := shift(action)
 		if ok {
 			p.stateStack = append(p.stateStack, state)
 
-			currentToken, err = lexer.NextToken()
-			if err == io.EOF {
-				currentToken = lexical.EOF
-			}
+			currentToken, _ = lexer.NextToken()
 			action = p.actionTable[state][currentToken]
 
 			continue
