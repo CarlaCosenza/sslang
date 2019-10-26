@@ -1,5 +1,10 @@
 package scope
 
+import (
+	"fmt"
+	"strings"
+)
+
 const (
 	maxNestLevel = 64
 )
@@ -64,21 +69,26 @@ type ObjectType interface {
 	objType()
 }
 
+func (a Alias) objType()    {}
+func (a Type) objType()     {}
+func (a Array) objType()    {}
+func (a Struct) objType()   {}
+func (a Function) objType() {}
+func (a Var) objType()      {}
+func (a Param) objType()    {}
+func (a Field) objType()    {}
+
 // Alias defines the alias object type
 type Alias struct {
 	BaseType *Object
 	Size     int
 }
 
-func (a Alias) objType() {}
-
 // Type defines the alias object type
 type Type struct {
 	BaseType *Object
 	Size     int
 }
-
-func (a Type) objType() {}
 
 // Array defines the array object type
 type Array struct {
@@ -87,15 +97,11 @@ type Array struct {
 	Size        int
 }
 
-func (a Array) objType() {}
-
 // Struct defines the struct object type
 type Struct struct {
 	Fields *Object
 	Size   int
 }
-
-func (a Struct) objType() {}
 
 // Function defines the function object type
 type Function struct {
@@ -106,16 +112,12 @@ type Function struct {
 	Vars     int
 }
 
-func (a Function) objType() {}
-
 // Var defines the var object type
 type Var struct {
 	PType *Object
 	Index int
 	Size  int
 }
-
-func (a Var) objType() {}
 
 // Param defines the var object type
 type Param struct {
@@ -124,16 +126,12 @@ type Param struct {
 	Size  int
 }
 
-func (a Param) objType() {}
-
 // Field defines the var object type
 type Field struct {
 	PType *Object
 	Index int
 	Size  int
 }
-
-func (a Field) objType() {}
 
 // Analyser is the scope analyser
 type Analyser struct {
@@ -240,4 +238,32 @@ func (a *Analyser) CheckTypes(p1, p2 *Object) bool {
 	}
 
 	return false
+}
+
+func (o *Object) String() string {
+	var sb strings.Builder
+
+	sb.WriteString(fmt.Sprintf("Kind: %v Name: %v Type: ", o.Kind, o.Name))
+	switch o.T.(type) {
+	case Alias:
+		sb.WriteString("Alias")
+	case Type:
+		sb.WriteString("Type")
+	case Array:
+		sb.WriteString("Array")
+	case Struct:
+		sb.WriteString("Struct")
+	case Function:
+		sb.WriteString("Function")
+	case Var:
+		sb.WriteString("Var")
+	case Param:
+		sb.WriteString("Param")
+	case Field:
+		sb.WriteString("Field")
+	default:
+		sb.WriteString("INVALID")
+	}
+
+	return sb.String()
 }
