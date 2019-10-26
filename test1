@@ -1,4 +1,0 @@
-
-'integer' 'char' 'boolean' 'string' 'type' '=' 'array' '[' ']' 'of' 'struct' '{' '}' ';' ':' 'function' '(' ')' ',' 'var' 'if' 'else' 'while' 'do' 'break' 'continue' '&&' '||' '<' '>' '<=' '>=' '==' '!=' '+' '-' '*' '/' '++' '--' '!' '.' Id 'true' 'false' c s n $ P LDE DE T DT DC DF LP B LDV LS DV LI S U M E L R Y F LE LV NB NF MF MT ME MW MC IDD IDU ID TRUE FALSE CHR STR NUM
-
-'integer' 'char' 'boolean' 'string' 'type' '=' 'array' '[' ']' 'of' 'struct' '{' '}' ';' ':' 'function' '(' ')' ',' 'var' 'if' 'else' 'while' 'do' 'break' 'continue' '&&' '||' '<' '>' '<=' '>=' '==' '!=' '+' '-' '*' '/' '++' '--' '!' '.' Id 'true' 'false' c s n $ P LDE DE T DT DC DF LP B LDV LS DV LI S U M E L R Y F LE LV NB NF MF MT ME MW MC IDD IDU ID TRUE FALSE CHR STR NUM

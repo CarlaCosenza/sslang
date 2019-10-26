@@ -14,6 +14,7 @@ requires:
 clone the repository wherever, then:
 
 	cd sslang
+	go build
 	./sslang example.ssl
 
 output will be:
