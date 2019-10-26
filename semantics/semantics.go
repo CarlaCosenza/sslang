@@ -3,13 +3,13 @@ package semantics
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/lucbarr/sslang/lexical"
 	"github.com/lucbarr/sslang/nonterminals"
 	"github.com/lucbarr/sslang/scope"
 )
 
+// Analyser is the semantical analyser
 type Analyser struct {
 	Stack []Attribute
 	scope *scope.Analyser
@@ -20,10 +20,12 @@ type Analyser struct {
 	label  int
 }
 
+// Close closes the analyser's generated VM code
 func (a *Analyser) Close() error {
 	return a.f.Close()
 }
 
+// NewAnalyser creates a new analyser
 func NewAnalyser(l *lexical.Lexer) *Analyser {
 	f, _ := os.Create("out")
 	return &Analyser{
@@ -34,16 +36,7 @@ func NewAnalyser(l *lexical.Lexer) *Analyser {
 	}
 }
 
-func (a *Analyser) StackString() string {
-	var sb strings.Builder
-	sb.WriteString("[ ")
-	for _, s := range a.Stack {
-		sb.WriteString(fmt.Sprintf("%v ", s))
-	}
-	sb.WriteString("]")
-	return sb.String()
-}
-
+// Parse performs a semantical reduction rule parsing logic
 func (a *Analyser) Parse(r int) {
 	rule := Rule(r)
 
@@ -1320,14 +1313,17 @@ func (a *Analyser) Parse(r int) {
 	}
 }
 
+// Push pushes an attribute to the attribute stack
 func (a *Analyser) Push(attr Attribute) {
 	a.Stack = append(a.Stack, attr)
 }
 
+// Pop pops an attribute from the attribute stack
 func (a *Analyser) Pop() {
 	a.Stack = a.Stack[:len(a.Stack)-1]
 }
 
+// Top returns the top stack value
 func (a *Analyser) Top() Attribute {
 	if len(a.Stack) == 0 {
 		return Attribute{}
